@@ -1,0 +1,82 @@
+{
+  "expo": {
+    "name": "Brecise",
+    "slug": "brecise",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/breciselogo.png",
+    "scheme": "brecise",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#ffffff",
+        "foregroundImage": "./assets/images/breciselogo.png",
+        "monochromeImage": "./assets/images/notification-icon.png"
+      },
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS"
+      ],
+      "package": "com.brecise.app"
+    },
+    "web": {
+      "output": "static",
+      "favicon": "./assets/images/breciselogo.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/breciselogo.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#ffffff"
+        }
+      ],
+      "expo-audio",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Izinkan Brecise mengakses galeri untuk foto profil.",
+          "cameraPermission": "Izinkan Brecise menggunakan kamera untuk foto profil."
+        }
+      ],
+      "expo-secure-store",
+      "expo-web-browser",
+      "expo-font",
+      "@react-native-community/datetimepicker",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/notification-icon.png",
+          "color": "#6BFF8F",
+          "sounds": []
+        }
+      ],
+      [
+        "react-native-google-mobile-ads",
+        {
+          "androidAppId": "ca-app-pub-4673696615107294~2220067287",
+          "iosAppId": "ca-app-pub-4673696615107294~2220067287"
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "9f1d6671-630f-4c7b-b11e-749375f31780"
+      }
+    }
+  }
+}
