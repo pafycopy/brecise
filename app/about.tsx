@@ -79,7 +79,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1, borderBottomColor: '#F0F0F0',
   },
   backBtn: { width: 32, height: 32, alignItems: 'flex-start', justifyContent: 'flex-start' },
-  headerTitle: { fontSize: 17, fontWeight: '700', color: '#111' },
+  headerTitle: { fontSize: 17, fontWeight: '700', color: '#111', fontFamily: 'Lexend-Bold' },
 
   content: { paddingHorizontal: 24, paddingTop: 24 },
 
@@ -97,20 +97,20 @@ const styles = StyleSheet.create({
   logoImage: {
     width: 64, height: 64,
   },
-  appName: { fontSize: 16, fontWeight: '800', color: '#111' },
+  appName: { fontSize: 16, fontWeight: '800', color: '#111', fontFamily: 'Lexend-Black' },
 
   sectionTitleCenter: {
     fontSize: 18, fontWeight: '800', color: '#111',
-    textAlign: 'center', marginTop: 8,
+    textAlign: 'center', marginTop: 8, fontFamily: 'Lexend-Black',
   },
   versionText: {
     fontSize: 13, color: '#999',
-    textAlign: 'center', marginTop: 2, marginBottom: 20,
+    textAlign: 'center', marginTop: 2, marginBottom: 20, fontFamily: 'Lexend-Regular',
   },
 
   paragraph: {
     fontSize: 14, color: '#555', lineHeight: 22,
-    marginBottom: 24, textAlign: 'left',
+    marginBottom: 24, textAlign: 'left', fontFamily: 'Lexend-Regular',
   },
 
   sectionHeading: {
@@ -124,5 +124,5 @@ const styles = StyleSheet.create({
     width: 6, height: 6, borderRadius: 3,
     backgroundColor: '#2E7D32', marginTop: 7,
   },
-  listText: { fontSize: 14, color: '#333', lineHeight: 21, flex: 1 },
+  listText: { fontSize: 14, color: '#333', lineHeight: 21, flex: 1, fontFamily: 'Lexend-Regular' },
 });

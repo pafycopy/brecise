@@ -244,7 +244,7 @@ const ActivityHistoryCard = () => {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>
-          Activity History
+          Riwayat Aktivitas
         </Text>
 
         {/* Tombol "View All" selalu muncul */}
@@ -356,7 +356,7 @@ const styles = StyleSheet.create({
   },
 
   workoutName: {
-    flex: 1,
+    flex: 1, fontFamily: 'Lexend-Bold',
     fontSize: 14,
     fontWeight: '700',
     color: '#111',
@@ -364,13 +364,13 @@ const styles = StyleSheet.create({
   },
 
   detail: {
-    fontSize: 14,
+    fontSize: 14, fontFamily: 'Lexend-Regular',
     color: '#666',
     lineHeight: 20,
   },
 
   dateLabel: {
-    fontSize: 12,
+    fontSize: 12, fontFamily: 'Lexend-Bold',
     fontWeight: '600',
     color: '#555',
   },
@@ -382,7 +382,7 @@ const styles = StyleSheet.create({
 
   emptyText: {
     marginTop: 8,
-    fontSize: 14,
+    fontSize: 14, fontFamily: 'Lexend-Regular',
     color: '#999',
   },
 });

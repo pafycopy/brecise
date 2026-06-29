@@ -124,20 +124,20 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1, borderBottomColor: '#F0F0F0',
   },
   backBtn: { width: 32, height: 32, alignItems: 'flex-start', justifyContent: 'center' },
-  headerTitle: { fontSize: 17, fontWeight: '700', color: '#111' },
-  Title: { fontSize: 24, fontWeight: '700', color: '#111' },
+  headerTitle: { fontSize: 17, fontWeight: '700', color: '#111', fontFamily: 'Lexend-Bold' },
+  Title: { fontSize: 24, fontWeight: '700', color: '#111', fontFamily: 'Lexend-Bold' },
 
   content: { paddingHorizontal: 20, paddingTop: 20 },
 
-  lastUpdated: { fontSize: 12, color: '#999', marginBottom: 12 },
-  intro: { fontSize: 14, color: '#555', lineHeight: 22, marginBottom: 24 },
+  lastUpdated: { fontSize: 12, color: '#999', marginBottom: 12, fontFamily: 'Lexend-Regular' },
+  intro: { fontSize: 14, color: '#555', lineHeight: 22, marginBottom: 24, fontFamily: 'Lexend-Regular' },
 
   sectionTitle: {
     fontSize: 15, fontWeight: '800', color: '#111',
-    marginBottom: 10, marginTop: 4,
+    marginBottom: 10, marginTop: 4, fontFamily: 'Lexend-Black',
   },
   paragraph: {
-    fontSize: 14, color: '#555', lineHeight: 21, marginBottom: 22,
+    fontSize: 14, color: '#555', lineHeight: 21, marginBottom: 22, fontFamily: 'Lexend-Regular',
   },
 
   list: { gap: 8, marginBottom: 22 },
@@ -146,7 +146,7 @@ const styles = StyleSheet.create({
     width: 6, height: 6, borderRadius: 3,
     backgroundColor: '#2E7D32', marginTop: 7,
   },
-  listText: { fontSize: 14, color: '#333', lineHeight: 20, flex: 1 },
+  listText: { fontSize: 14, color: '#333', lineHeight: 20, flex: 1, fontFamily: 'Lexend-Regular' },
 
   contactBox: {
     backgroundColor: '#F0FFF4', borderRadius: 16, padding: 16,
@@ -156,7 +156,7 @@ const styles = StyleSheet.create({
   contactHeader: {
     flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8,
   },
-  contactTitle: { fontSize: 14, fontWeight: '800', color: '#111' },
-  contactText: { fontSize: 13, color: '#555', lineHeight: 19, marginBottom: 8 },
-  contactEmail: { fontSize: 14, fontWeight: '700', color: '#2E7D32' },
+  contactTitle: { fontSize: 14, fontWeight: '800', color: '#111', fontFamily: 'Lexend-Black' },
+  contactText: { fontSize: 13, color: '#555', lineHeight: 19, marginBottom: 8, fontFamily: 'Lexend-Regular' },
+  contactEmail: { fontSize: 14, fontWeight: '700', color: '#2E7D32', fontFamily: 'Lexend-Bold' },
 });

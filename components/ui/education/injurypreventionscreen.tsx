@@ -288,7 +288,7 @@ const styles = StyleSheet.create({
 
   headerTitle: {
     flex: 1,
-
+ fontFamily: 'Lexend-Bold',
     textAlign: 'center',
 
     marginHorizontal: 10,
@@ -322,7 +322,7 @@ const styles = StyleSheet.create({
   topLabelText: {
     fontSize: 10,
     fontWeight: '600',
-    color: '#444',
+    color: '#444', fontFamily: 'Lexend-Bold',
   },
 
   heroSection: {
@@ -332,7 +332,7 @@ const styles = StyleSheet.create({
   heroTitle: {
     fontSize: 38,
     fontWeight: '800',
-    color: '#111',
+    color: '#111', fontFamily: 'Lexend-Black',
 
     lineHeight: 42,
 
@@ -340,7 +340,7 @@ const styles = StyleSheet.create({
   },
 
   heroDescription: {
-    fontSize: 16,
+    fontSize: 16, fontFamily: 'Lexend-Regular',
     lineHeight: 28,
     color: '#5F5F5F',
   },
@@ -371,7 +371,7 @@ const styles = StyleSheet.create({
   numberText: {
     fontSize: 11,
     fontWeight: '800',
-    color: '#6BFF8F',
+    color: '#6BFF8F', fontFamily: 'Lexend-Black',
   },
 
   lessonTitle: {
@@ -379,13 +379,13 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#111',
 
-    marginBottom: 4,
+    marginBottom: 4, fontFamily: 'Lexend-Black',
   },
 
   lessonSubtitle: {
     fontSize: 12,
     color: '#666',
-
+ fontFamily: 'Lexend-Regular',
     marginBottom: 18,
   },
 
@@ -404,7 +404,7 @@ const styles = StyleSheet.create({
   infoLabel: {
     fontSize: 11,
     fontWeight: '800',
-
+ fontFamily: 'Lexend-Black',
     letterSpacing: 0.5,
 
     marginBottom: 4,
@@ -412,10 +412,10 @@ const styles = StyleSheet.create({
 
   infoText: {
     fontSize: 14,
-    lineHeight: 23,
+    lineHeight: 23, fontFamily: 'Lexend-Regular',
     color: '#333',
 
-    fontWeight: '500',
+    fontWeight: '500', 
   },
 
 });

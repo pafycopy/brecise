@@ -364,7 +364,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center', alignItems: 'center',
     backgroundColor: '#F5F5F5',
   },
-  headerTitle: { fontSize: 18, fontWeight: '700', color: '#1A1A1A' },
+  headerTitle: { fontSize: 18, fontWeight: '700', color: '#1A1A1A', fontFamily: 'Lexend-Bold' },
 
   // Inline filter card (sticky, not scrollable)
   filterCard: {
@@ -383,7 +383,7 @@ const styles = StyleSheet.create({
   filterTitle: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#1A1A1A',
+    color: '#1A1A1A', fontFamily: 'Lexend-Bold',
     marginBottom: 14,
   },
   dateFields: {
@@ -400,12 +400,12 @@ const styles = StyleSheet.create({
   dateFieldLabel: {
     fontSize: 10,
     fontWeight: '700',
-    color: '#888',
+    color: '#888', fontFamily: 'Lexend-Bold',
     letterSpacing: 0.4,
   },
   dateFieldValue: {
     fontSize: 10,
-    fontWeight: '600',
+    fontWeight: '600', fontFamily: 'Lexend-Bold',
     color: '#888',
   },
   dateInput: {
@@ -421,10 +421,10 @@ const styles = StyleSheet.create({
   dateInputText: {
     fontSize: 13,
     color: '#1A1A1A',
-    fontWeight: '500',
+    fontWeight: '500', fontFamily: 'Lexend-Regular',
   },
   placeholderText: {
-    color: '#AAA',
+    color: '#AAA', fontFamily: 'Lexend-Regular',
   },
   filterActions: {
     flexDirection: 'row',
@@ -440,7 +440,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   resetBtnText: {
-    color: '#1B6B3A',
+    color: '#1B6B3A', fontFamily: 'Lexend-Bold',
     fontWeight: '700',
     fontSize: 12,
     letterSpacing: 0.5,
@@ -453,7 +453,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   applyBtnText: {
-    color: '#fff',
+    color: '#fff', fontFamily: 'Lexend-Bold',
     fontWeight: '700',
     fontSize: 12,
     letterSpacing: 0.5,
@@ -489,9 +489,9 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     marginBottom: 3,
   },
-  workoutName: { flex: 1, fontSize: 14, fontWeight: '700', color: '#1A1A1A', paddingRight: 8 },
-  detail:      { fontSize: 12, color: '#666', lineHeight: 17 },
-  dateChip:    { fontSize: 11, fontWeight: '600', color: '#888' },
+  workoutName: { flex: 1, fontSize: 14, fontWeight: '700', color: '#1A1A1A', paddingRight: 8, fontFamily: 'Lexend-Bold' },
+  detail:      { fontSize: 12, color: '#666', lineHeight: 17, fontFamily: 'Lexend-Regular' },
+  dateChip:    { fontSize: 11, fontWeight: '600', color: '#888', fontFamily: 'Lexend-Bold' },
 
   // Empty state
   empty: {
@@ -502,7 +502,7 @@ const styles = StyleSheet.create({
   emptyText: {
     marginTop: 12,
     fontSize: 14,
-    color: '#888',
+    color: '#888', fontFamily: 'Lexend-Regular',
     textAlign: 'center',
   },
 });

@@ -112,18 +112,18 @@ const ProfileScreen = () => {
                 />
               </View>
 
-              <View style={{ flex: 1 }}>
+              <View style={{ flex: 1,}}>
                 <Text style={styles.programTitle}>
                   Program Aktif
                 </Text>
 
-                <Text style={styles.programSub}>
+                <Text style={styles.programSub} >
                   {LEVEL_LABEL[assessment.level]} ·{' '}
                   {GOAL_LABEL[assessment.goal]}
                 </Text>
               </View>
 
-              <View style={{ flexDirection: 'row', gap: 8 }}>
+              <View style={{ flexDirection: 'row', gap: 8, }}>
                 <TouchableOpacity
                   style={styles.programDeleteBtn}
                   onPress={handleResetProgram}
@@ -142,7 +142,7 @@ const ProfileScreen = () => {
               </View>
             </View>
 
-            <View style={styles.programStats}>
+            <View style={styles.programStats} >
 
               <View style={styles.programStat}>
                 <Text style={styles.programStatValue}>
@@ -219,7 +219,7 @@ const ProfileScreen = () => {
         {/* Activity Calendar */}
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>
-            Activity Calendar
+            Aktivitas Kalender
           </Text>
         </View>
 
@@ -269,7 +269,7 @@ const styles = StyleSheet.create({
   },
 
   sectionTitle: {
-    fontSize: 15,
+    fontSize: 15, fontFamily: 'Lexend-Bold',
     fontWeight: '700',
     color: '#1A1A1A',
   },
@@ -310,13 +310,13 @@ const styles = StyleSheet.create({
   },
 
   programTitle: {
-    fontSize: 14,
+    fontSize: 14, fontFamily: 'Lexend-Bold',
     fontWeight: '700',
     color: '#111',
   },
 
   programSub: {
-    fontSize: 12,
+    fontSize: 12, fontFamily: 'Lexend-Regular',
     color: '#777',
     marginTop: 2,
   },
@@ -340,7 +340,7 @@ const styles = StyleSheet.create({
   },
 
   programEditText: {
-    fontSize: 12,
+    fontSize: 12, fontFamily: 'Lexend-Bold',
     fontWeight: '700',
     color: '#2E7D32',
   },
@@ -356,13 +356,13 @@ const styles = StyleSheet.create({
   },
 
   programStatValue: {
-    fontSize: 18,
+    fontSize: 18, fontFamily: 'Lexend-Black',
     fontWeight: '800',
     color: '#111',
   },
 
   programStatLabel: {
-    fontSize: 11,
+    fontSize: 11, fontFamily: 'Lexend-Regular',
     color: '#888',
     marginTop: 2,
   },
@@ -414,13 +414,13 @@ const styles = StyleSheet.create({
   },
 
   assessmentTitle: {
-    fontSize: 14,
+    fontSize: 14, fontFamily: 'Lexend-Bold',
     fontWeight: '700',
     color: '#111',
   },
 
   assessmentSub: {
-    fontSize: 12,
+    fontSize: 12, fontFamily: 'Lexend-Regular',
     color: '#666',
     marginTop: 2,
   },
@@ -443,7 +443,7 @@ const styles = StyleSheet.create({
   },
 
   resetText: {
-    fontSize: 13,
+    fontSize: 13, fontFamily: 'Lexend-Regular',
     color: '#888',
   },
 
@@ -471,7 +471,7 @@ const styles = StyleSheet.create({
   },
 
   logoutText: {
-    fontSize: 14,
+    fontSize: 14, fontFamily: 'Lexend-Bold',
     fontWeight: '600',
     color: '#E53935',
   },

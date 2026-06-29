@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router';
 export default function NotFound() {
   const router = useRouter();
 
-  useEffect(() => {
+  useEffect(() => { 
     // Kalau landing di route kosong (dari OAuth callback), 
     // biarkan _layout.tsx yang handle routing
     router.replace('/');

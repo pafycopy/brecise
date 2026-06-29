@@ -619,7 +619,7 @@ const styles = StyleSheet.create({
   },
 
   sectionTitle: {
-    fontSize: 22,
+    fontSize: 22, fontFamily: 'Lexend-Black',
     fontWeight: '800',
     color: '#1A1A2E',
 
@@ -629,7 +629,7 @@ const styles = StyleSheet.create({
   },
 
   title: {
-    padding: 12,
+    padding: 12, fontFamily: 'Lexend-Bold',
 
     marginLeft: 16,
     marginTop: 16,

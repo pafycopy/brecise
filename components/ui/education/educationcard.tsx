@@ -65,13 +65,13 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: '700', fontFamily: 'Lexend-Bold',
     color: '#111',
     marginBottom: 6,
   },
   description: {
     fontSize: 13,
-    lineHeight: 20,
+    lineHeight: 20, fontFamily: 'Lexend-Regular',
     color: '#777',
   },
   chevron: {

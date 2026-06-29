@@ -12,8 +12,12 @@ import { useRouter } from 'expo-router';
 import { useUserStore } from '@/store/userStore';
 import * as WebBrowser from 'expo-web-browser';
 import * as Linking from 'expo-linking';
+import { useAssessmentStore } from '@/store/assessmentStore';
+import { checkProStatus } from '@/lib/proService';
 
 WebBrowser.maybeCompleteAuthSession();
+
+const PRIVACY_URL = 'https://pafycopy.github.io/brecise-privacy/';
 
 type Screen = 'splash' | 'register' | 'login' | 'forgot' | 'otp' | 'reset';
 
@@ -24,8 +28,6 @@ function Logo({ size = 'md' }: { size?: 'sm' | 'md' | 'lg' }) {
     size === 'md' ? logoStyles.imageMd :
     logoStyles.imageSm;
 
-  const nameStyle = size === 'sm' ? logoStyles.nameSm : logoStyles.nameMd;
-
   return (
     <View style={logoStyles.wrapper}>
       <Image
@@ -33,22 +35,21 @@ function Logo({ size = 'md' }: { size?: 'sm' | 'md' | 'lg' }) {
         style={imageStyle}
         resizeMode="contain"
       />
-      <Text style={[logoStyles.name, nameStyle]}>Brecise</Text>
     </View>
   );
 }
 
 const logoStyles = StyleSheet.create({
   wrapper: { alignItems: 'center', gap: 8, },
-  imageLg: { width: 90, height: 90, marginLeft:16 },
-  imageMd: { width: 72, height: 72, marginLeft:16 },
-  imageSm: { width: 56, height: 56, marginLeft:16 },
-  name: { fontWeight: '800', color: '#111' },
+  imageLg: { width: 160, height: 160, marginLeft:16 },
+  imageMd: { width: 80, height: 80, marginLeft:16 },
+  imageSm: { width: 60, height: 60, marginLeft:16 },
+  name: { fontWeight: '800', color: '#111', fontFamily: 'Lexend-Black' },
   nameMd: { fontSize: 18 },
   nameSm: { fontSize: 15 },
 });
 
-// ── FormWrapper di luar AuthScreen agar tidak re-render saat state berubah ──
+// ── FormWrapper ───────────────────────────────────────────────────────────────
 function FormWrapper({ children }: { children: React.ReactNode }) {
   return (
     <SafeAreaView style={styles.safe}>
@@ -70,6 +71,7 @@ function FormWrapper({ children }: { children: React.ReactNode }) {
 export default function AuthScreen() {
   const router = useRouter();
   const { setName } = useUserStore();
+  const { syncFromSupabase } = useAssessmentStore();
 
   const [screen, setScreen] = useState<Screen>('splash');
   const [fullName, setFullName] = useState('');
@@ -89,11 +91,42 @@ export default function AuthScreen() {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+  // Inline validation errors
+  const [emailError, setEmailError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [nameError, setNameError] = useState('');
+
+  // ── Helpers ──────────────────────────────────────────────────────────────
+  const isValidEmail = (val: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val.trim());
+
+  const validatePasswordStrength = (val: string): string => {
+    if (val.length < 6) return 'Password minimal 6 karakter';
+    if (!/[A-Za-z]/.test(val)) return 'Password harus mengandung huruf';
+    if (!/[0-9]/.test(val)) return 'Password harus mengandung angka';
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(val)) return 'Password harus mengandung simbol (!@#$%^&*)';
+    return '';
+  };
+
+  const clearErrors = () => {
+    setEmailError('');
+    setPasswordError('');
+    setNameError('');
+  };
+
   // ── REGISTER ──────────────────────────────────────────────────────────────
   const handleRegister = async () => {
-    if (!fullName.trim()) { Alert.alert('Nama tidak boleh kosong'); return; }
-    if (!email.trim()) { Alert.alert('Email tidak boleh kosong'); return; }
-    if (password.length < 6) { Alert.alert('Password minimal 6 karakter'); return; }
+    clearErrors();
+    let hasError = false;
+
+    if (!fullName.trim()) { setNameError('Nama tidak boleh kosong'); hasError = true; }
+    if (!email.trim()) {
+      setEmailError('Email tidak boleh kosong'); hasError = true;
+    } else if (!isValidEmail(email)) {
+      setEmailError('Format email tidak valid'); hasError = true;
+    }
+    const pwdErr = validatePasswordStrength(password);
+    if (pwdErr) { setPasswordError(pwdErr); hasError = true; }
+    if (hasError) return;
     try {
       setLoading(true);
       const { error } = await supabase.auth.signUp({ email, password });
@@ -109,11 +142,24 @@ export default function AuthScreen() {
 
   // ── LOGIN ─────────────────────────────────────────────────────────────────
   const handleLogin = async () => {
-    if (!email.trim() || !password) { Alert.alert('Isi email dan password'); return; }
+    clearErrors();
+    let hasError = false;
+
+    if (!email.trim()) {
+      setEmailError('Email tidak boleh kosong'); hasError = true;
+    } else if (!isValidEmail(email)) {
+      setEmailError('Format email tidak valid'); hasError = true;
+    }
+    if (!password) { setPasswordError('Password tidak boleh kosong'); hasError = true; }
+    if (hasError) return;
     try {
       setLoading(true);
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
+
+      // Hydrate assessment + status Pro dari Supabase setelah login
+      await Promise.all([syncFromSupabase(), checkProStatus()]);
+
       router.replace('/(tabs)/dashboard');
     } catch (err: any) {
       Alert.alert('Login gagal', err.message);
@@ -137,10 +183,8 @@ export default function AuthScreen() {
       const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
 
       if (result.type === 'success' && result.url) {
-        // ✅ Implicit flow: ambil access_token langsung dari URL fragment
         const url = result.url;
 
-        // Coba dari hash fragment (#access_token=...)
         const hashParams = new URLSearchParams(url.split('#')[1] ?? '');
         const accessToken = hashParams.get('access_token');
         const refreshToken = hashParams.get('refresh_token');
@@ -152,7 +196,6 @@ export default function AuthScreen() {
           });
           if (sessionError) throw sessionError;
         } else {
-          // Fallback: coba dari query param (?code=...)
           const urlObj = new URL(url);
           const code = urlObj.searchParams.get('code');
           if (code) {
@@ -161,14 +204,14 @@ export default function AuthScreen() {
         }
       }
 
-      // Cek session setelah proses
       const { data: sd } = await supabase.auth.getSession();
       if (sd?.session) {
+        // Hydrate assessment + status Pro dari Supabase setelah Google login
+        await Promise.all([syncFromSupabase(), checkProStatus()]);
+
         router.replace('/(tabs)/dashboard');
         return;
       }
-
-      // Kalau result dismissed atau tidak ada session, tidak error
     } catch (err: any) {
       Alert.alert('Google Login Error', err?.message || 'Terjadi kesalahan');
     } finally {
@@ -211,7 +254,6 @@ export default function AuthScreen() {
         type: 'recovery',
       });
       if (error) throw error;
-      // ✅ Langsung ke screen reset, _layout sudah diblok redirect-nya
       setNewPassword('');
       setConfirmNewPassword('');
       setScreen('reset');
@@ -236,7 +278,6 @@ export default function AuthScreen() {
       setLoading(true);
       const { error } = await supabase.auth.updateUser({ password: newPassword });
       if (error) throw error;
-      // ✅ Sign out setelah berhasil update password
       await supabase.auth.signOut();
       Alert.alert('Berhasil! 🎉', 'Password kamu berhasil diubah. Silakan masuk.', [
         {
@@ -300,8 +341,6 @@ export default function AuthScreen() {
     }
   };
 
-
-
   // ── SPLASH ────────────────────────────────────────────────────────────────
   if (screen === 'splash') {
     return (
@@ -316,7 +355,7 @@ export default function AuthScreen() {
           </View>
           <View style={styles.splashButtons}>
             <TouchableOpacity style={styles.btnPrimary} onPress={() => setScreen('register')}>
-              <Text style={styles.btnPrimaryText}>Create Account</Text>
+              <Text style={styles.btnPrimaryText}>Buat Akun</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={() => setScreen('login')}>
               <Text style={styles.splashLoginText}>
@@ -340,7 +379,6 @@ export default function AuthScreen() {
         <Logo size="md" />
 
         <View style={styles.screenHeader}>
-          {/* Shield icon */}
           <View style={styles.iconBadge}>
             <Ionicons name="shield-checkmark" size={32} color="#6BFF8F" />
           </View>
@@ -389,7 +427,6 @@ export default function AuthScreen() {
         <Logo size="md" />
 
         <View style={styles.screenHeader}>
-          {/* Key icon */}
           <View style={styles.iconBadge}>
             <Ionicons name="key" size={32} color="#6BFF8F" />
           </View>
@@ -400,7 +437,6 @@ export default function AuthScreen() {
           </Text>
         </View>
 
-        {/* OTP Boxes */}
         <View style={styles.otpRow}>
           {otp.map((digit, index) => (
             <TextInput
@@ -440,13 +476,12 @@ export default function AuthScreen() {
         <Logo size="md" />
 
         <View style={styles.screenHeader}>
-          {/* Checkmark icon */}
           <View style={[styles.iconBadge, styles.iconBadgeGreen]}>
             <Ionicons name="checkmark" size={32} color="#111" />
           </View>
           <Text style={styles.screenTitle}>Atur ulang kata sandi</Text>
           <Text style={styles.screenSubtitle}>
-            Kata Sandi Anda harus paling tidak 6 karakter dan harus menyertakan kombinasi angka, huruf, dan karakter khusus (!$@%).
+            Kata Sandi Anda harus paling tidak 6 karakter dan harus menyertakan kombinasi huruf, angka, dan simbol (!@#$%^&*).
           </Text>
         </View>
 
@@ -522,68 +557,66 @@ export default function AuthScreen() {
             <View style={styles.fields}>
               {isRegister && (
                 <View style={styles.fieldGroup}>
-                  <Text style={styles.fieldLabel}>Full Name</Text>
-                  <View style={styles.inputRow}>
+                  <Text style={styles.fieldLabel}>Nama Lengkap</Text>
+                  <View style={[styles.inputRow, !!nameError && styles.inputRowError]}>
                     <Ionicons name="person-outline" size={18} color="#AAA" style={styles.inputIcon} />
                     <TextInput
                       style={styles.input}
-                      placeholder="User"
+                      placeholder="Masukan nama lengkap anda"
                       placeholderTextColor="#CCC"
                       value={fullName}
-                      onChangeText={setFullName}
+                      onChangeText={(v) => { setFullName(v); if (nameError) setNameError(''); }}
                     />
                   </View>
+                  {!!nameError && <Text style={styles.errorText}>{nameError}</Text>}
                 </View>
               )}
 
               <View style={styles.fieldGroup}>
-                <Text style={styles.fieldLabel}>Email Address</Text>
-                <View style={styles.inputRow}>
+                <Text style={styles.fieldLabel}>Alamat Email</Text>
+                <View style={[styles.inputRow, !!emailError && styles.inputRowError]}>
                   <Ionicons name="mail-outline" size={18} color="#AAA" style={styles.inputIcon} />
                   <TextInput
                     style={styles.input}
                     placeholder="example@gmail.com"
                     placeholderTextColor="#CCC"
                     value={email}
-                    onChangeText={setEmail}
+                    onChangeText={(v) => { setEmail(v); if (emailError) setEmailError(''); }}
                     keyboardType="email-address"
                     autoCapitalize="none"
                   />
                 </View>
+                {!!emailError && <Text style={styles.errorText}>{emailError}</Text>}
               </View>
 
               <View style={styles.fieldGroup}>
-                <Text style={styles.fieldLabel}>Password</Text>
-
-                <View style={styles.inputRow}>
+                <Text style={styles.fieldLabel}>Kata Sandi</Text>
+                <View style={[styles.inputRow, !!passwordError && styles.inputRowError]}>
                   <Ionicons name="lock-closed-outline" size={18} color="#AAA" style={styles.inputIcon} />
-
                   <TextInput
                     style={styles.input}
                     placeholder="••••••••"
                     placeholderTextColor="#CCC"
                     value={password}
-                    onChangeText={setPassword}
+                    onChangeText={(v) => { setPassword(v); if (passwordError) setPasswordError(''); }}
                     secureTextEntry={!showPassword}
                   />
-
                   <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                    <Ionicons 
-                      name={showPassword ? 'eye-off-outline' : 'eye-outline'} 
-                      size={18} 
-                      color="#AAA" 
+                    <Ionicons
+                      name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                      size={18}
+                      color="#AAA"
                     />
                   </TouchableOpacity>
                 </View>
+                {!!passwordError && <Text style={styles.errorText}>{passwordError}</Text>}
 
                 {!isRegister && (
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     style={styles.forgotBelow}
                     onPress={() => setScreen('forgot')}
                   >
-                    <Text style={styles.forgotLink}>
-                      Lupa Password?
-                    </Text>
+                    <Text style={styles.forgotLink}>Lupa Password?</Text>
                   </TouchableOpacity>
                 )}
               </View>
@@ -596,7 +629,7 @@ export default function AuthScreen() {
             >
               {loading
                 ? <ActivityIndicator color="#111" />
-                : <Text style={styles.btnPrimaryText}>{isRegister ? 'Create Account' : 'Sign In'}</Text>
+                : <Text style={styles.btnPrimaryText}>{isRegister ? 'Buat Akun' : 'Masuk'}</Text>
               }
             </TouchableOpacity>
 
@@ -606,12 +639,27 @@ export default function AuthScreen() {
               <View style={styles.dividerLine} />
             </View>
 
-            <TouchableOpacity style={styles.googleBtn} onPress={handleGoogle} disabled={loading}>
-              <Text style={styles.googleIcon}>G</Text>
+            <TouchableOpacity
+              style={styles.googleBtn}
+              onPress={handleGoogle}
+              disabled={loading}
+            >
+              <Image source={require('@/assets/images/G.png')} />
               <Text style={styles.googleText}>Google</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.switchRow} onPress={() => setScreen(isRegister ? 'login' : 'register')}>
+            <Text style={styles.privacyText}>
+              Dengan membuat akun, Anda menyetujui{' '}
+              <Text
+                style={styles.privacyLink}
+                onPress={() => Linking.openURL(PRIVACY_URL)}
+              >
+                Kebijakan Privasi
+              </Text>
+              {' '}BRECISE.
+            </Text>
+
+            <TouchableOpacity style={styles.switchRow} onPress={() => { clearErrors(); setScreen(isRegister ? 'login' : 'register'); }}>
               <Text style={styles.switchText}>
                 {isRegister ? 'Sudah punya akun? ' : 'Belum punya akun? '}
                 <Text style={styles.switchBold}>{isRegister ? 'Masuk' : 'Daftar'}</Text>
@@ -629,18 +677,18 @@ const styles = StyleSheet.create({
 
   // ── Splash ──
   splashContainer: {
-    flex: 1, justifyContent: 'space-between',
+    flex: 1, justifyContent: 'space-around',
     paddingHorizontal: 28, paddingTop: 60, paddingBottom: 48,
   },
   splashTextBlock: { alignItems: 'center', gap: 10 },
-  splashTitle: { fontSize: 28, fontWeight: '800', color: '#111', textAlign: 'center', lineHeight: 38 },
-  splashSub: { fontSize: 14, color: '#888', textAlign: 'center' },
+  splashTitle: { fontSize: 28, fontWeight: '800', color: '#111', textAlign: 'center', lineHeight: 38, fontFamily: 'Lexend-Black' },
+  splashSub: { fontSize: 14, color: '#888', textAlign: 'center', fontFamily: 'Lexend-Regular' },
   splashButtons: { gap: 16, alignItems: 'center' },
-  splashLoginText: { fontSize: 14, color: '#888' },
-  splashLoginBold: { fontWeight: '800', color: '#111' },
+  splashLoginText: { fontSize: 14, color: '#888', fontFamily: 'Lexend-Regular' },
+  splashLoginBold: { fontWeight: '800', color: '#111', fontFamily: 'Lexend-Bold' },
 
   // ── Form wrapper ──
-  formContainer: { paddingHorizontal: 24, paddingTop: 4, paddingBottom: 48 },
+  formContainer: { paddingHorizontal: 24, paddingTop: 4, paddingBottom: 48, fontFamily: 'Lexend-Regular' },
   backBtn: {
     width: 36, height: 36, borderRadius: 18,
     backgroundColor: '#F4F4F4', alignItems: 'center', justifyContent: 'center',
@@ -656,19 +704,16 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center', marginBottom: 4,
   },
   iconBadgeGreen: { backgroundColor: '#6BFF8F', borderColor: '#6BFF8F' },
-  screenTitle: { fontSize: 22, fontWeight: '800', color: '#111', textAlign: 'center' },
-  screenSubtitle: { fontSize: 13, color: '#888', textAlign: 'center', lineHeight: 20 },
+  screenTitle: { fontSize: 22, fontWeight: '800', color: '#111', textAlign: 'center', fontFamily: 'Lexend-Black' },
+  screenSubtitle: { fontSize: 13, color: '#888', textAlign: 'center', lineHeight: 20, fontFamily: 'Lexend-Regular' },
 
   // ── Fields ──
   fields: { gap: 14, marginBottom: 20 },
   fieldGroup: { gap: 6 },
-  fieldLabel: { fontSize: 12, fontWeight: '700', color: '#555', letterSpacing: 0.3 },
+  fieldLabel: { fontSize: 12, fontWeight: '700', color: '#555', letterSpacing: 0.3, fontFamily: 'Lexend-Bold' },
   passwordLabelRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  forgotBelow: {
-  alignItems: 'flex-end',
-  marginTop: 8,
-},
-  forgotLink: { fontSize: 12, fontWeight: '700', color: '#6BFF8F' },
+  forgotBelow: { alignItems: 'flex-end', marginTop: 8 },
+  forgotLink: { fontSize: 12, fontWeight: '700', color: '#6BFF8F', fontFamily: 'Lexend-Bold' },
 
   inputRow: {
     flexDirection: 'row', alignItems: 'center',
@@ -678,8 +723,8 @@ const styles = StyleSheet.create({
   },
   inputRowError: { borderColor: '#FF6B6B' },
   inputIcon: { marginRight: 10 },
-  input: { flex: 1, fontSize: 15, color: '#111' },
-  errorText: { fontSize: 11, color: '#FF6B6B', fontWeight: '600' },
+  input: { flex: 1, fontSize: 15, color: '#111', fontFamily: 'Lexend-Regular' },
+  errorText: { fontSize: 11, color: '#FF6B6B', fontWeight: '600', fontFamily: 'Lexend-Bold' },
 
   // ── OTP ──
   otpRow: {
@@ -690,12 +735,12 @@ const styles = StyleSheet.create({
     flex: 1, height: 56, borderRadius: 12,
     borderWidth: 1.5, borderColor: '#EEEEEE',
     backgroundColor: '#F7F7F7',
-    textAlign: 'center', fontSize: 22, fontWeight: '700', color: '#111',
+    textAlign: 'center', fontSize: 22, fontWeight: '700', color: '#111', fontFamily: 'Lexend-Bold',
   },
   otpBoxFilled: { borderColor: '#6BFF8F', backgroundColor: '#F0FFF4' },
 
   resendRow: { alignItems: 'center', marginTop: 20 },
-  resendDisabled: { color: '#BBB' },
+  resendDisabled: { color: '#BBB', fontFamily: 'Lexend-Regular' },
 
   // ── Buttons ──
   btnPrimary: {
@@ -703,23 +748,36 @@ const styles = StyleSheet.create({
     height: 54, width: '100%',
     alignItems: 'center', justifyContent: 'center', marginBottom: 20,
   },
-  btnPrimaryText: { fontSize: 15, fontWeight: '800', color: '#111' },
+  btnPrimaryText: { fontSize: 15, fontWeight: '800', color: '#111', fontFamily: 'Lexend-Black' },
 
   // ── Divider / Google ──
   dividerRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 16 },
   dividerLine: { flex: 1, height: 1, backgroundColor: '#EEEEEE' },
-  dividerText: { fontSize: 10, fontWeight: '700', color: '#BBB', letterSpacing: 0.5 },
+  dividerText: { fontSize: 10, fontWeight: '700', color: '#BBB', letterSpacing: 0.5, fontFamily: 'Lexend-Bold' },
   googleBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10,
     borderRadius: 40, height: 54,
     borderWidth: 1.5, borderColor: '#EEEEEE',
-    backgroundColor: '#FFFFFF', marginBottom: 24,
+    backgroundColor: '#FFFFFF', marginBottom: 16,
   },
-  googleIcon: { fontSize: 18, fontWeight: '800', color: '#4285F4' },
-  googleText: { fontSize: 15, fontWeight: '600', color: '#111' },
+  googleText: { fontSize: 15, fontWeight: '600', color: '#111', fontFamily: 'Lexend-Bold' },
+
+  // ── Privacy Policy ──
+  privacyText: {
+    fontSize: 12,
+    color: '#999',
+    textAlign: 'center',
+    marginBottom: 16,
+    lineHeight: 18, fontFamily: 'Lexend-Regular',
+  },
+  privacyLink: {
+    color: '#6BFF8F',
+    fontWeight: '700', fontFamily: 'Lexend-Bold',
+    textDecorationLine: 'underline',
+  },
 
   // ── Switch ──
   switchRow: { alignItems: 'center', marginBottom: 12 },
-  switchText: { fontSize: 13, color: '#888', textAlign: 'center' },
-  switchBold: { fontWeight: '800', color: '#111' },
-});
+  switchText: { fontSize: 13, color: '#888', textAlign: 'center', fontFamily: 'Lexend-Regular' },
+  switchBold: { fontWeight: '800', color: '#111', fontFamily: 'Lexend-Bold' },
+}); 

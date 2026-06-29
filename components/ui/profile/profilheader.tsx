@@ -2,14 +2,16 @@ import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useUserStore } from '@/store/userStore';
+import { useProStore } from '@/store/proStore';
 
 const ProfileHeader = () => {
   const { name, location, avatarUri } = useUserStore();
+  const isPro = useProStore((s) => s.isPro);
 
   return (
     <View style={styles.outerContainer}>
-      {/* Card pembungkus */}
       <View style={styles.card}>
+
         {/* Avatar */}
         <TouchableOpacity
           style={styles.avatarWrapper}
@@ -25,8 +27,15 @@ const ProfileHeader = () => {
           </View>
         </TouchableOpacity>
 
-        {/* Nama */}
-        <Text style={styles.name}>{name}</Text>
+        {/* Nama + badge Pro */}
+        <View style={styles.nameRow}>
+          <Text style={styles.name}>{name}</Text>
+          {isPro && (
+            <View style={styles.proBadge}>
+              <Ionicons name="star" size={10} color="#fff" />
+            </View>
+          )}
+        </View>
 
         {/* Lokasi */}
         <TouchableOpacity
@@ -38,6 +47,7 @@ const ProfileHeader = () => {
           <Text style={styles.location}>{location}</Text>
           <Ionicons name="chevron-forward" size={12} color="#bbb" />
         </TouchableOpacity>
+
       </View>
     </View>
   );
@@ -82,28 +92,44 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 2,
     right: 2,
-    backgroundColor: '#2E7D32',
-    borderRadius: 11,
-    width: 22,
-    height: 22,
+    backgroundColor: '#111',
+    borderRadius: 17,
+    width: 28,
+    height: 28,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
     borderColor: '#fff',
   },
-  name: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#1A1A1A',
+
+  // ── Nama + Pro badge ──
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
     marginBottom: 6,
   },
+  name: {
+    fontSize: 18, fontFamily: 'Lexend-Bold',
+    fontWeight: '700',
+    color: '#1A1A1A',
+  },
+  proBadge: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#1B2E1F',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
   locationRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
   },
   location: {
-    fontSize: 13,
+    fontSize: 13, fontFamily: 'Lexend-Regular',
     color: '#888',
   },
 });

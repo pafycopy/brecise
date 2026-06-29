@@ -143,15 +143,15 @@ const styles = StyleSheet.create({
     gap: 8,
     marginBottom: 2,
   },
-  heroIcon: { fontSize: 18 },
+  heroIcon: { fontSize: 18, fontFamily: 'Lexend-Regular' },
   heroTitle: {
-    fontSize: 22, fontWeight: '800', color: '#111', flex: 1, lineHeight: 28,
+    fontSize: 22, fontWeight: '800', color: '#111', flex: 1, lineHeight: 28, fontFamily: 'Lexend-Black',
   },
-  heroSubtitle: {
-    fontSize: 13, color: '#666', fontStyle: 'italic',
+  heroSubtitle: { fontFamily: 'Lexend-Regular',
+    fontSize: 13, color: '#666', fontStyle: 'italic', 
   },
   heroDesc: {
-    fontSize: 14, lineHeight: 24, color: '#444',
+    fontSize: 14, lineHeight: 24, color: '#444', fontFamily: 'Lexend-Regular',
   },
 
   // ── Section card (beristirahat & konsultasi) ───────────────
@@ -176,7 +176,7 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
   sectionTitle: {
-    fontSize: 16, fontWeight: '800', color: '#111',
+    fontSize: 16, fontWeight: '800', color: '#111', fontFamily: 'Lexend-Black',
   },
 
   // ── Item row ───────────────────────────────────────────────
@@ -199,6 +199,6 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 14,
     lineHeight: 22,
-    color: '#333',
+    color: '#333', fontFamily: 'Lexend-Regular',
   },
 });

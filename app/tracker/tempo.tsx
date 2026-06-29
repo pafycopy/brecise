@@ -4,7 +4,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import {
   Alert, View, Text, StyleSheet, TouchableOpacity,
-  Pressable, Vibration, ScrollView, Dimensions,
+  Pressable, Vibration, ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Circle } from 'react-native-svg';
@@ -13,6 +13,7 @@ import * as Location from 'expo-location';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useFinishWorkout } from '@/hooks/useFinishWorkout';
+import { useStartSound } from '@/hooks/useStartSound';
 
 const MIN_SPEED_MS       = 1.0;
 const MIN_ACCURACY_M     = 15;
@@ -40,7 +41,7 @@ type PhaseResult = {
   hit: boolean;
 };
 
-// ─── Full Circular Progress (pakai Circle SVG, bukan arc Path) ────────────
+// ─── Circular Progress ────────────────────────────────────────────────────
 const RING_SIZE = 220;
 const STROKE    = 14;
 const RADIUS    = (RING_SIZE - STROKE) / 2;
@@ -48,56 +49,29 @@ const CENTER    = RING_SIZE / 2;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 
 function CircularProgress({
-  progress,
-  color,
-  currentDist,
-  targetDist,
+  progress, color, currentDist, targetDist,
 }: {
-  progress: number;
-  color: string;
-  currentDist: number;
-  targetDist: number;
+  progress: number; color: string; currentDist: number; targetDist: number;
 }) {
-  const clampedProgress = Math.min(Math.max(progress, 0), 1);
-  // strokeDashoffset: 0 = penuh, CIRCUMFERENCE = kosong
+  const clampedProgress  = Math.min(Math.max(progress, 0), 1);
   const strokeDashoffset = CIRCUMFERENCE * (1 - clampedProgress);
 
   return (
     <View style={ringStyles.wrapper}>
       <Svg width={RING_SIZE} height={RING_SIZE}>
-        {/* Track (full circle abu-abu) */}
-        <Circle
-          cx={CENTER}
-          cy={CENTER}
-          r={RADIUS}
-          stroke="#EBEBEB"
-          strokeWidth={STROKE}
-          fill="none"
-        />
-        {/* Progress fill - mulai dari atas (rotate -90deg via transform) */}
-        <Circle
-          cx={CENTER}
-          cy={CENTER}
-          r={RADIUS}
-          stroke={color}
-          strokeWidth={STROKE}
-          fill="none"
+        <Circle cx={CENTER} cy={CENTER} r={RADIUS} stroke="#EBEBEB" strokeWidth={STROKE} fill="none" />
+        <Circle cx={CENTER} cy={CENTER} r={RADIUS}
+          stroke={color} strokeWidth={STROKE} fill="none"
           strokeDasharray={`${CIRCUMFERENCE} ${CIRCUMFERENCE}`}
           strokeDashoffset={strokeDashoffset}
           strokeLinecap="round"
           transform={`rotate(-90 ${CENTER} ${CENTER})`}
         />
       </Svg>
-
-      {/* Center content */}
       <View style={ringStyles.centerContent}>
-        <Text style={ringStyles.progressLabel}>
-          {currentDist.toFixed(2)} km / {targetDist} km
-        </Text>
+        <Text style={ringStyles.progressLabel}>{currentDist.toFixed(2)} km / {targetDist} km</Text>
         <Text style={ringStyles.label}>DISTANCE</Text>
-        <Text style={[ringStyles.distanceValue, { color }]}>
-          {currentDist.toFixed(2)}
-        </Text>
+        <Text style={[ringStyles.distanceValue, { color }]}>{currentDist.toFixed(2)}</Text>
         <Text style={ringStyles.distanceUnit}>KM</Text>
       </View>
     </View>
@@ -105,41 +79,12 @@ function CircularProgress({
 }
 
 const ringStyles = StyleSheet.create({
-  wrapper: {
-    width: RING_SIZE,
-    height: RING_SIZE,
-    alignItems: 'center',
-    justifyContent: 'center',
-    alignSelf: 'center',
-  },
-  centerContent: {
-    position: 'absolute',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  progressLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#999',
-    marginBottom: 2,
-  },
-  label: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#AAA',
-    letterSpacing: 1.5,
-  },
-  distanceValue: {
-    fontSize: 44,
-    fontWeight: '900',
-    lineHeight: 52,
-    letterSpacing: -1,
-  },
-  distanceUnit: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#888',
-  },
+  wrapper: { width: RING_SIZE, height: RING_SIZE, alignItems: 'center', justifyContent: 'center', alignSelf: 'center' },
+  centerContent: { position: 'absolute', alignItems: 'center', justifyContent: 'center' },
+  progressLabel: { fontSize: 12, fontWeight: '600', color: '#999', marginBottom: 2 },
+  label:         { fontSize: 11, fontWeight: '700', color: '#AAA', letterSpacing: 1.5 },
+  distanceValue: { fontSize: 44, fontWeight: '900', lineHeight: 52, letterSpacing: -1 },
+  distanceUnit:  { fontSize: 16, fontWeight: '700', color: '#888' },
 });
 
 // ─── Main Component ───────────────────────────────────────────────────────
@@ -158,21 +103,9 @@ export default function TempoTracker() {
   }>();
 
   const phases: PhaseData[] = [
-    {
-      key: 'warmup', label: 'Warm Up', color: '#FF9500', emoji: '🔥',
-      targetDistKm:  parseFloat(warmupDistance  ?? '0'),
-      targetPaceRaw: warmupPace  ?? '0',
-    },
-    {
-      key: 'tempo', label: 'Tempo Session', color: '#2E7D32', emoji: '⚡',
-      targetDistKm:  parseFloat(tempoDistance   ?? '0'),
-      targetPaceRaw: targetPace  ?? '0',
-    },
-    {
-      key: 'cooldown', label: 'Cool Down', color: '#007AFF', emoji: '❄️',
-      targetDistKm:  parseFloat(cooldownDistance ?? '0'),
-      targetPaceRaw: cooldownPace ?? '0',
-    },
+    { key: 'warmup',   label: 'Warm Up',       color: '#FF9500', emoji: '🔥', targetDistKm: parseFloat(warmupDistance   ?? '0'), targetPaceRaw: warmupPace   ?? '0' },
+    { key: 'tempo',    label: 'Tempo Session',  color: '#2E7D32', emoji: '⚡', targetDistKm: parseFloat(tempoDistance    ?? '0'), targetPaceRaw: targetPace   ?? '0' },
+    { key: 'cooldown', label: 'Cool Down',      color: '#007AFF', emoji: '❄️', targetDistKm: parseFloat(cooldownDistance ?? '0'), targetPaceRaw: cooldownPace ?? '0' },
   ];
 
   const [currentPhaseIndex, setCurrentPhaseIndex] = useState(0);
@@ -207,19 +140,18 @@ export default function TempoTracker() {
 
   const holdProgress = useSharedValue(0);
 
+  const { finish } = useFinishWorkout(
+    dateKey, uid, [timerRef], subscription,
+    { hasOwnDoneScreen: true, onAfterSave: () => setStatus('done') },
+  );
+
+  const { playStartSound } = useStartSound();
+
   useEffect(() => { phaseDistRef.current   = phaseDist;         }, [phaseDist]);
   useEffect(() => { phaseTimeRef.current   = phaseTime;         }, [phaseTime]);
   useEffect(() => { phaseMovingRef.current = phaseMovingTime;   }, [phaseMovingTime]);
   useEffect(() => { phaseIndexRef.current  = currentPhaseIndex; }, [currentPhaseIndex]);
   useEffect(() => { statusRef.current      = status;            }, [status]);
-
-  const { finish } = useFinishWorkout(
-    dateKey, uid, [timerRef], subscription,
-    {
-      hasOwnDoneScreen: true,
-      onAfterSave: () => setStatus('done'),
-    },
-  );
 
   useEffect(() => {
     if (status === 'running') {
@@ -237,8 +169,8 @@ export default function TempoTracker() {
     const k = kalmanRef.current[axis];
     if (!k.initialized) { k.estimate = measurement; k.initialized = true; return measurement; }
     k.errorEstimate += 0.0001;
-    k.gain       = k.errorEstimate / (k.errorEstimate + k.errorMeasure);
-    k.estimate   = k.estimate + k.gain * (measurement - k.estimate);
+    k.gain          = k.errorEstimate / (k.errorEstimate + k.errorMeasure);
+    k.estimate      = k.estimate + k.gain * (measurement - k.estimate);
     k.errorEstimate = (1 - k.gain) * k.errorEstimate;
     return k.estimate;
   };
@@ -377,6 +309,7 @@ export default function TempoTracker() {
       resetKalman();
       autoTriggered.current = false;
       await startLocationWatch();
+      await playStartSound();
       setStatus('running');
     } else if (status === 'running') {
       subscription.current?.remove();
@@ -387,6 +320,7 @@ export default function TempoTracker() {
     } else {
       resetKalman();
       await startLocationWatch();
+      await playStartSound();
       setStatus('running');
     }
   };
@@ -512,7 +446,6 @@ export default function TempoTracker() {
   // ─── Running screen ───────────────────────────────────────────────────────
   return (
     <SafeAreaView style={styles.safeArea}>
-      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={handleDiscard}>
           <Ionicons name="chevron-back" size={24} color="#111" />
@@ -521,7 +454,6 @@ export default function TempoTracker() {
         <View style={{ width: 24 }} />
       </View>
 
-      {/* Phase Stepper */}
       <View style={styles.stepper}>
         {phases.map((phase, index) => {
           const isDone   = index < currentPhaseIndex;
@@ -553,13 +485,9 @@ export default function TempoTracker() {
         })}
       </View>
 
-      {/* Main content — pakai View biasa bukan ScrollView agar tidak ada gap aneh */}
       <View style={styles.mainContent}>
-        {/* Phase Title + Badge */}
         <View style={styles.phaseTitleRow}>
-          <Text style={[styles.phaseTitle, { color: phaseColor }]}>
-            {currentPhase?.label}
-          </Text>
+          <Text style={[styles.phaseTitle, { color: phaseColor }]}>{currentPhase?.label}</Text>
           {status !== 'idle' && (
             <View style={[styles.badge, { backgroundColor: status === 'running' ? phaseColor : '#FF9500' }]}>
               <Text style={styles.badgeText}>
@@ -569,7 +497,6 @@ export default function TempoTracker() {
           )}
         </View>
 
-        {/* Ring */}
         <CircularProgress
           progress={distProgress}
           color={phaseColor}
@@ -577,12 +504,10 @@ export default function TempoTracker() {
           targetDist={currentPhase?.targetDistKm ?? 0}
         />
 
-        {/* Target Info */}
         <Text style={styles.targetText}>
           Target: {currentPhase?.targetDistKm} km @ {formatPace(currentPhase?.targetPaceRaw ?? '0')}/km
         </Text>
 
-        {/* Stats Row */}
         <View style={styles.statsRow}>
           <View style={styles.statCard}>
             <Text style={styles.statLabel}>DURATION</Text>
@@ -596,7 +521,6 @@ export default function TempoTracker() {
           </View>
         </View>
 
-        {/* Buttons */}
         <View style={styles.buttonGroup}>
           <TouchableOpacity
             style={[styles.mainBtn, { backgroundColor: status === 'paused' ? '#FFB84D' : phaseColor }]}
@@ -654,76 +578,54 @@ const styles = StyleSheet.create({
     backgroundColor: '#FAFAFA',
     borderBottomWidth: 1, borderBottomColor: '#F0F0F0',
   },
-  stepperItem: { flex: 1, alignItems: 'center', position: 'relative' },
+  stepperItem:  { flex: 1, alignItems: 'center', position: 'relative' },
   stepperDot: {
     width: 26, height: 26, borderRadius: 13,
     backgroundColor: '#F0F0F0', borderWidth: 1, borderColor: '#DDD',
     alignItems: 'center', justifyContent: 'center', marginBottom: 6,
   },
-  stepperNum:  { fontSize: 11, fontWeight: '700', color: '#AAA' },
+  stepperNum:   { fontSize: 11, fontWeight: '700', color: '#AAA' },
   stepperLabel: { fontSize: 10, fontWeight: '600', color: '#AAA', textAlign: 'center', lineHeight: 14 },
   stepperLine: {
     position: 'absolute', top: 13, right: -20,
     width: 40, height: 1, backgroundColor: '#E0E0E0',
   },
 
-  // Ganti ScrollView jadi View flex biasa → tidak ada gap berlebih
   mainContent: {
-    flex: 1,
-    paddingHorizontal: 24,
-    paddingTop: 16,
-    paddingBottom: 24,
+    flex: 1, paddingHorizontal: 24, paddingTop: 16, paddingBottom: 24,
     justifyContent: 'space-between',
   },
 
-  phaseTitleRow: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10,
-  },
-  phaseTitle: { fontSize: 20, fontWeight: '800', textAlign: 'center' },
+  phaseTitleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10 },
+  phaseTitle:    { fontSize: 20, fontWeight: '800', textAlign: 'center' },
 
-  badge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },
+  badge:     { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },
   badgeText: { color: '#fff', fontSize: 10, fontWeight: '700', letterSpacing: 0.8 },
 
-  targetText: {
-    textAlign: 'center', fontSize: 12, color: '#999', fontWeight: '500',
-  },
+  targetText: { textAlign: 'center', fontSize: 12, color: '#999', fontWeight: '500' },
 
   statsRow: { flexDirection: 'row', gap: 12 },
-  statCard: {
-    flex: 1, backgroundColor: '#F7F7F7', borderRadius: 16,
-    paddingVertical: 16, alignItems: 'center', gap: 3,
-  },
+  statCard: { flex: 1, backgroundColor: '#F7F7F7', borderRadius: 16, paddingVertical: 16, alignItems: 'center', gap: 3 },
   statLabel: { fontSize: 11, color: '#999', fontWeight: '700', letterSpacing: 0.8 },
   statValue: { fontSize: 22, fontWeight: '900', color: '#111' },
   statSub:   { fontSize: 10, color: '#BBB', fontWeight: '600' },
 
   buttonGroup: { gap: 10 },
-  bottomHint: { textAlign: 'center', color: '#AAA', fontSize: 12 },
-  mainBtn: { borderRadius: 999, height: 56, justifyContent: 'center', alignItems: 'center' },
+  bottomHint:  { textAlign: 'center', color: '#AAA', fontSize: 12 },
+  mainBtn:     { borderRadius: 999, height: 56, justifyContent: 'center', alignItems: 'center' },
   mainBtnText: { color: '#fff', fontSize: 15, fontWeight: '800', letterSpacing: 1 },
-  nextBtn: {
-    borderRadius: 999, height: 52,
-    justifyContent: 'center', alignItems: 'center',
-    borderWidth: 2, backgroundColor: '#FFFFFF',
-  },
+  nextBtn: { borderRadius: 999, height: 52, justifyContent: 'center', alignItems: 'center', borderWidth: 2, backgroundColor: '#FFFFFF' },
   nextBtnText: { fontSize: 14, fontWeight: '800', letterSpacing: 1 },
-  finishBtn: {
-    height: 56, borderRadius: 999, borderWidth: 2,
-    borderColor: 'rgba(0,0,0,0.2)', backgroundColor: '#FFFFFF',
-    justifyContent: 'center', alignItems: 'center', overflow: 'hidden',
-  },
+  finishBtn: { height: 56, borderRadius: 999, borderWidth: 2, borderColor: 'rgba(0,0,0,0.2)', backgroundColor: '#FFFFFF', justifyContent: 'center', alignItems: 'center', overflow: 'hidden' },
   finishBtnFill: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: 999 },
-  finishText: { fontWeight: '700', letterSpacing: 1, fontSize: 14 },
+  finishText:    { fontWeight: '700', letterSpacing: 1, fontSize: 14 },
 
   // Done screen
   doneContainer: { padding: 24, gap: 20, paddingBottom: 48, alignItems: 'center' },
-  trophyWrapper: {
-    width: 88, height: 88, borderRadius: 44,
-    backgroundColor: '#111', alignItems: 'center', justifyContent: 'center', marginTop: 12,
-  },
+  trophyWrapper: { width: 88, height: 88, borderRadius: 44, backgroundColor: '#111', alignItems: 'center', justifyContent: 'center', marginTop: 12 },
   doneTitle: { fontSize: 36, fontWeight: '900', color: '#1A1A2E', textAlign: 'center', lineHeight: 42 },
-  doneSub: { fontSize: 14, color: '#888', textAlign: 'center', lineHeight: 20 },
-  durationBox: { width: '100%', backgroundColor: '#F4F4F4', borderRadius: 16, padding: 20, gap: 2 },
+  doneSub:   { fontSize: 14, color: '#888', textAlign: 'center', lineHeight: 20 },
+  durationBox:   { width: '100%', backgroundColor: '#F4F4F4', borderRadius: 16, padding: 20, gap: 2 },
   durationLabel: { fontSize: 11, fontWeight: '700', color: '#AAA', letterSpacing: 0.8 },
   durationValue: { fontSize: 36, fontWeight: '900', color: '#1A1A2E' },
   durationUnit:  { fontSize: 14, color: '#888', fontWeight: '600' },
@@ -734,16 +636,16 @@ const styles = StyleSheet.create({
   statBoxValue: { fontSize: 24, fontWeight: '900', color: '#1A1A2E' },
   statBoxUnit:  { fontSize: 12, color: '#888', fontWeight: '500' },
   sectionTitle: { alignSelf: 'flex-start', fontSize: 11, fontWeight: '700', color: '#999', letterSpacing: 0.8 },
-  phaseResultCard: { width: '100%', backgroundColor: '#F9F9F9', borderRadius: 14, padding: 14, borderLeftWidth: 4, gap: 10 },
+  phaseResultCard:   { width: '100%', backgroundColor: '#F9F9F9', borderRadius: 14, padding: 14, borderLeftWidth: 4, gap: 10 },
   phaseResultHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  phaseResultTitle: { fontSize: 13, fontWeight: '800', color: '#1A1A2E' },
-  hitBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 },
+  phaseResultTitle:  { fontSize: 13, fontWeight: '800', color: '#1A1A2E' },
+  hitBadge:     { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 },
   hitBadgeText: { fontSize: 11, fontWeight: '700' },
   phaseResultStats: { flexDirection: 'row', justifyContent: 'space-between' },
-  phaseResultStat: { alignItems: 'center', gap: 2 },
-  phaseStatLabel: { fontSize: 10, fontWeight: '600', color: '#AAA', letterSpacing: 0.5 },
-  phaseStatValue: { fontSize: 15, fontWeight: '800', color: '#1A1A2E' },
-  phaseStatTarget: { fontSize: 10, color: '#BBB' },
-  doneBtn: { width: '100%', backgroundColor: '#63EA7B', borderRadius: 40, paddingVertical: 16, alignItems: 'center' },
+  phaseResultStat:  { alignItems: 'center', gap: 2 },
+  phaseStatLabel:   { fontSize: 10, fontWeight: '600', color: '#AAA', letterSpacing: 0.5 },
+  phaseStatValue:   { fontSize: 15, fontWeight: '800', color: '#1A1A2E' },
+  phaseStatTarget:  { fontSize: 10, color: '#BBB' },
+  doneBtn:     { width: '100%', backgroundColor: '#63EA7B', borderRadius: 40, paddingVertical: 16, alignItems: 'center' },
   doneBtnText: { color: '#111', fontWeight: '800', fontSize: 16 },
 });

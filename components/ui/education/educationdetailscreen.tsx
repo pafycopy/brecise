@@ -67,7 +67,7 @@ export default function EducationDetailScreen({ topic, onBack }: Props) {
               <View style={styles.videoBtnIcon}>
                 <Ionicons name="play" size={14} color="#fff" />
               </View>
-              <Text style={styles.videoBtnText}>Watch Video</Text>
+              <Text style={styles.videoBtnText}>Tonton Video</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -206,7 +206,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     flex: 1, textAlign: 'center', marginHorizontal: 8,
-    fontSize: 15, fontWeight: '700', color: '#111',
+    fontSize: 15, fontWeight: '700', color: '#111', fontFamily: 'Lexend-Bold',
   },
   content: { padding: 20, paddingBottom: 48 },
   heroSection: { gap: 12, marginBottom: 24 },
@@ -214,9 +214,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', gap: 6,
     alignSelf: 'flex-start', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20,
   },
-  heroBadgeText: { fontSize: 12, fontWeight: '700', color: '#111' },
-  heroTitle: { fontSize: 26, fontWeight: '800', color: '#111', lineHeight: 32 },
-  heroDescription: { fontSize: 14, lineHeight: 22, color: '#555' },
+  heroBadgeText: { fontSize: 12, fontWeight: '700', color: '#111', fontFamily: 'Lexend-Bold' },
+  heroTitle: { fontSize: 26, fontWeight: '800', color: '#111', lineHeight: 32, fontFamily: 'Lexend-Black' },
+  heroDescription: { fontSize: 14, lineHeight: 22, color: '#555', fontFamily: 'Lexend-Regular' },
   videoBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 8,
     alignSelf: 'flex-start', backgroundColor: '#111',
@@ -226,26 +226,26 @@ const styles = StyleSheet.create({
     width: 22, height: 22, borderRadius: 11,
     backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center',
   },
-  videoBtnText: { color: '#fff', fontSize: 13, fontWeight: '700' },
+  videoBtnText: { color: '#fff', fontSize: 13, fontWeight: '700', fontFamily: 'Lexend-Bold' },
   divider: { height: 1, backgroundColor: '#EEEEEE', marginBottom: 24 },
   lessonCard: { flexDirection: 'row', gap: 16, marginBottom: 4 },
   lessonLeft: { alignItems: 'center', width: 36 },
   lessonNum: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', zIndex: 1 },
-  lessonNumText: { fontSize: 11, fontWeight: '800', color: '#111' },
+  lessonNumText: { fontSize: 11, fontWeight: '800', color: '#111', fontFamily: 'Lexend-Black' },
   lessonLine: { width: 2, flex: 1, backgroundColor: '#EEEEEE', marginTop: 4, marginBottom: 4, minHeight: 32 },
   lessonRight: { flex: 1, paddingBottom: 28 },
-  lessonTitle: { fontSize: 16, fontWeight: '800', color: '#111', marginBottom: 8, lineHeight: 22 },
-  lessonDescription: { fontSize: 14, lineHeight: 22, color: '#555', marginBottom: 10 },
+  lessonTitle: { fontSize: 16, fontWeight: '800', color: '#111', marginBottom: 8, lineHeight: 22, fontFamily: 'Lexend-Black' },
+  lessonDescription: { fontSize: 14, lineHeight: 22, color: '#555', marginBottom: 10, fontFamily: 'Lexend-Regular' },
   cardLesson: {
     backgroundColor: '#FFFFFF', borderRadius: 16, marginBottom: 10,
     shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 6, elevation: 1,
   },
   cardLessonInner: { padding: 16, flexDirection: 'row', alignItems: 'center', gap: 12 },
   cardLessonText: { flex: 1, gap: 2 },
-  cardLessonTitle: { fontSize: 16, fontWeight: '700', color: '#111' },
-  cardLessonSubtitle: { fontSize: 12, color: '#999', fontStyle: 'italic' },
-  cardLessonDesc: { fontSize: 13, lineHeight: 20, color: '#666', marginTop: 4 },
+  cardLessonTitle: { fontSize: 16, fontWeight: '700', color: '#111', fontFamily: 'Lexend-Bold' },
+  cardLessonSubtitle: { fontSize: 12, color: '#999', fontStyle: 'italic', fontFamily: 'Lexend-Regular' },
+  cardLessonDesc: { fontSize: 13, lineHeight: 20, color: '#666', marginTop: 4, fontFamily: 'Lexend-Regular' },
   footer: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 8, marginBottom: 6 },
-  footerText: { flex: 1, fontSize: 13, fontWeight: '600', color: '#333' },
-  footerSub: { fontSize: 12, color: '#AAA', lineHeight: 18 },
+  footerText: { flex: 1, fontSize: 13, fontWeight: '600', color: '#333', fontFamily: 'Lexend-Bold' },
+  footerSub: { fontSize: 12, color: '#AAA', lineHeight: 18, fontFamily: 'Lexend-Regular' },
 });

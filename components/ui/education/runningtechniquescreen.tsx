@@ -1,71 +1,49 @@
-import React, { useRef } from 'react';
+import React, { useRef } from "react";
 
 import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Animated,
-} from 'react-native';
+    Animated,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
+} from "react-native";
 
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView } from "react-native-safe-area-context";
 
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons } from "@expo/vector-icons";
 
-import {
-  EducationTopic,
-} from '@/constants/educationdata';
+import { EducationTopic } from "@/constants/educationdata";
 
 type Props = {
   topic: EducationTopic;
   onBack: () => void;
 };
 
-const RunningTechniqueScreen = ({
-  topic,
-  onBack,
-}: Props) => {
+const RunningTechniqueScreen = ({ topic, onBack }: Props) => {
+  const scrollY = useRef(new Animated.Value(0)).current;
 
-  const scrollY =
-    useRef(new Animated.Value(0)).current;
-
-  const headerTitleOpacity =
-    scrollY.interpolate({
-      inputRange: [60, 100],
-      outputRange: [0, 1],
-      extrapolate: 'clamp',
-    });
+  const headerTitleOpacity = scrollY.interpolate({
+    inputRange: [60, 100],
+    outputRange: [0, 1],
+    extrapolate: "clamp",
+  });
 
   return (
-
     <SafeAreaView style={styles.safeArea}>
-
       {/* HEADER */}
       <View style={styles.header}>
-
-        <TouchableOpacity
-          onPress={onBack}
-          style={styles.backBtn}
-        >
-          <Ionicons
-            name="arrow-back"
-            size={22}
-            color="#111"
-          />
+        <TouchableOpacity onPress={onBack} style={styles.backBtn}>
+          <Ionicons name="arrow-back" size={22} color="#111" />
         </TouchableOpacity>
 
         <Animated.Text
           numberOfLines={1}
-          style={[
-            styles.headerTitle,
-            { opacity: headerTitleOpacity },
-          ]}
+          style={[styles.headerTitle, { opacity: headerTitleOpacity }]}
         >
           {topic.title}
         </Animated.Text>
 
         <View style={{ width: 36 }} />
-
       </View>
 
       {/* CONTENT */}
@@ -85,13 +63,11 @@ const RunningTechniqueScreen = ({
           ],
           {
             useNativeDriver: true,
-          }
+          },
         )}
       >
-
         {/* HERO */}
         <View style={styles.heroSection}>
-
           <View
             style={[
               styles.heroBadge,
@@ -100,27 +76,14 @@ const RunningTechniqueScreen = ({
               },
             ]}
           >
+            <Ionicons name={topic.icon as any} size={16} color="#111" />
 
-            <Ionicons
-              name={topic.icon as any}
-              size={16}
-              color="#111"
-            />
-
-            <Text style={styles.heroBadgeText}>
-              Running Technique
-            </Text>
-
+            <Text style={styles.heroBadgeText}>Running Teknik</Text>
           </View>
 
-          <Text style={styles.heroTitle}>
-            {topic.title}
-          </Text>
+          <Text style={styles.heroTitle}>{topic.title}</Text>
 
-          <Text style={styles.heroDescription}>
-            {topic.heroDescription}
-          </Text>
-
+          <Text style={styles.heroDescription}>{topic.heroDescription}</Text>
         </View>
 
         {/* DIVIDER */}
@@ -128,55 +91,27 @@ const RunningTechniqueScreen = ({
 
         {/* LESSONS */}
         {topic.lessons.map((lesson, index) => (
-
-          <View
-            key={lesson.id}
-            style={styles.lessonCard}
-          >
-
+          <View key={lesson.id} style={styles.lessonCard}>
             {/* ICON */}
             <View style={styles.iconWrapper}>
-
-              <Ionicons
-                name={topic.icon as any}
-                size={18}
-                color="#222"
-              />
-
+              <Ionicons name={topic.icon as any} size={18} color="#222" />
             </View>
 
             {/* CONTENT */}
             <View style={styles.lessonContent}>
+              <Text style={styles.lessonLabel}>LANGKAH {index + 1}</Text>
 
-              <Text style={styles.lessonLabel}>
-                LANGKAH {index + 1}
-              </Text>
+              <Text style={styles.lessonTitle}>{lesson.title}</Text>
 
-              <Text style={styles.lessonTitle}>
-                {lesson.title}
-              </Text>
-
-              <Text style={styles.lessonDescription}>
-                {lesson.description}
-              </Text>
-
+              <Text style={styles.lessonDescription}>{lesson.description}</Text>
             </View>
-
           </View>
-
         ))}
 
         {/* FOOTER */}
         <View style={styles.footerSection}>
-
           <View style={styles.footerIcon}>
-
-            <Ionicons
-              name="checkmark-circle"
-              size={40}
-              color="#4ADE80"
-            />
-
+            <Ionicons name="checkmark-circle" size={40} color="#4ADE80" />
           </View>
 
           <Text style={styles.footerTitle}>
@@ -186,37 +121,32 @@ const RunningTechniqueScreen = ({
           <Text style={styles.footerDescription}>
             Fokuslah pada satu hal saja setiap kali Anda berlari.
           </Text>
-
         </View>
-
       </Animated.ScrollView>
-
     </SafeAreaView>
-
   );
 };
 
 export default RunningTechniqueScreen;
 
 const styles = StyleSheet.create({
-
   safeArea: {
     flex: 1,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: "#F3F4F6",
   },
 
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
 
     paddingHorizontal: 16,
     paddingVertical: 12,
 
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: "#E5E7EB",
 
-    backgroundColor: '#F3F4F6',
+    backgroundColor: "#F3F4F6",
   },
 
   backBtn: {
@@ -224,22 +154,23 @@ const styles = StyleSheet.create({
     height: 38,
     borderRadius: 19,
 
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
 
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
 
   headerTitle: {
     flex: 1,
 
-    textAlign: 'center',
+    textAlign: "center",
 
     marginHorizontal: 8,
 
     fontSize: 15,
-    fontWeight: '700',
-    color: '#111827',
+    fontWeight: "700",
+    fontFamily: "Lexend-Bold",
+    color: "#111827",
   },
 
   content: {
@@ -253,11 +184,11 @@ const styles = StyleSheet.create({
   },
 
   heroBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 6,
 
-    alignSelf: 'flex-start',
+    alignSelf: "flex-start",
 
     paddingHorizontal: 12,
     paddingVertical: 6,
@@ -267,14 +198,16 @@ const styles = StyleSheet.create({
 
   heroBadgeText: {
     fontSize: 12,
-    fontWeight: '700',
-    color: '#111827',
+    fontWeight: "700",
+    color: "#111827",
+    fontFamily: "Lexend-Bold",
   },
 
   heroTitle: {
     fontSize: 32,
-    fontWeight: '900',
-    color: '#111827',
+    fontWeight: "900",
+    color: "#111827",
+    fontFamily: "Lexend-Black",
 
     lineHeight: 40,
   },
@@ -282,19 +215,20 @@ const styles = StyleSheet.create({
   heroDescription: {
     fontSize: 15,
     lineHeight: 28,
-    color: '#6B7280',
+    fontFamily: "Lexend-Regular",
+    color: "#6B7280",
   },
 
   divider: {
     height: 1,
-    backgroundColor: '#E5E7EB',
+    backgroundColor: "#E5E7EB",
     marginBottom: 24,
   },
 
   lessonCard: {
-    flexDirection: 'row',
+    flexDirection: "row",
 
-    backgroundColor: '#F7F7F7',
+    backgroundColor: "#F7F7F7",
 
     borderRadius: 28,
 
@@ -310,10 +244,10 @@ const styles = StyleSheet.create({
     height: 56,
     borderRadius: 28,
 
-    backgroundColor: '#ECECEC',
+    backgroundColor: "#ECECEC",
 
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
 
     marginTop: 4,
   },
@@ -324,20 +258,20 @@ const styles = StyleSheet.create({
 
   lessonLabel: {
     fontSize: 11,
-    fontWeight: '800',
-
+    fontWeight: "800",
+    fontFamily: "Lexend-Black",
     letterSpacing: 1.4,
 
-    color: '#4ADE80',
+    color: "#4ADE80",
 
     marginBottom: 8,
   },
 
   lessonTitle: {
     fontSize: 22,
-    fontWeight: '900',
-
-    color: '#111827',
+    fontWeight: "900",
+    fontFamily: "Lexend-Black",
+    color: "#111827",
 
     lineHeight: 30,
 
@@ -346,14 +280,14 @@ const styles = StyleSheet.create({
 
   lessonDescription: {
     fontSize: 16,
-
+    fontFamily: "Lexend-Regular",
     lineHeight: 32,
 
-    color: '#374151',
+    color: "#374151",
   },
 
   footerSection: {
-    alignItems: 'center',
+    alignItems: "center",
 
     marginTop: 3,
     marginBottom: 0,
@@ -367,11 +301,11 @@ const styles = StyleSheet.create({
 
   footerTitle: {
     fontSize: 20,
-    fontWeight: '800',
+    fontWeight: "800",
+    fontFamily: "Lexend-Black",
+    color: "#111827",
 
-    color: '#111827',
-
-    textAlign: 'center',
+    textAlign: "center",
 
     marginBottom: 12,
   },
@@ -379,10 +313,10 @@ const styles = StyleSheet.create({
   footerDescription: {
     fontSize: 16,
     lineHeight: 28,
+    fontFamily: "Lexend-Regular",
 
-    color: '#4B5563',
+    color: "#4B5563",
 
-    textAlign: 'center',
+    textAlign: "center",
   },
-
 });

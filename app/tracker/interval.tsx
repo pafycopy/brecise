@@ -14,6 +14,7 @@ import * as Location from 'expo-location';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useFinishWorkout } from '@/hooks/useFinishWorkout';
+import { useStartSound } from '@/hooks/useStartSound';
 
 const MIN_SPEED_MS       = 1.0;
 const MIN_ACCURACY_M     = 15;
@@ -141,6 +142,8 @@ export default function IntervalTracker() {
     subscription,
     { hasOwnDoneScreen: true, onAfterSave: () => setPhase('done') },
   );
+
+  const { playStartSound } = useStartSound();
 
   useEffect(() => { phaseRef.current         = phase;         }, [phase]);
   useEffect(() => { repDistRef.current       = repDist;       }, [repDist]);
@@ -294,6 +297,7 @@ export default function IntervalTracker() {
     setRepDist(0); setRepTime(0); setRepMovingTime(0);
     lastLocationRef.current = null;
     resetKalman();
+    await playStartSound();
     await startLocationWatch();
     setPhase('running');
   };
@@ -315,6 +319,7 @@ export default function IntervalTracker() {
     if (status !== 'granted') { alert('Izin lokasi ditolak.'); return; }
     resetKalman();
     await startLocationWatch();
+    await playStartSound();
     setPhase('running');
   };
 
@@ -440,7 +445,6 @@ export default function IntervalTracker() {
   // ─── Running screen ───────────────────────────────────────────────────────
   return (
     <SafeAreaView style={styles.safeArea}>
-      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={handleDiscard}>
           <Ionicons name="chevron-back" size={24} color="#111" />
@@ -452,7 +456,6 @@ export default function IntervalTracker() {
         <View style={{ width: 24 }} />
       </View>
 
-      {/* Rep indicators */}
       <View style={styles.repIndicators}>
         {Array.from({ length: totalReps }).map((_, i) => {
           const done   = i < repResults.length;
@@ -468,10 +471,7 @@ export default function IntervalTracker() {
         })}
       </View>
 
-      {/* Main content */}
       <View style={styles.mainContent}>
-
-        {/* Rest overlay */}
         {phase === 'rest' && (
           <View style={styles.restOverlay}>
             <Text style={styles.restLabel}>ISTIRAHAT</Text>
@@ -484,7 +484,6 @@ export default function IntervalTracker() {
           </View>
         )}
 
-        {/* Phase label */}
         <View style={styles.phaseTitleRow}>
           <Text style={styles.phaseTitle}>
             {phase === 'idle' ? 'Siap Mulai' : phase === 'running' ? `Rep ${currentRep}` : 'Istirahat'}
@@ -496,7 +495,6 @@ export default function IntervalTracker() {
           )}
         </View>
 
-        {/* Circular ring */}
         <CircularProgress
           progress={distProgress}
           color="#FF9500"
@@ -504,12 +502,10 @@ export default function IntervalTracker() {
           targetDist={targetDistKm}
         />
 
-        {/* Target hint */}
         <Text style={styles.targetHint}>
           Target: {targetDistKm} km @ {formatTargetPace(pace ?? '0')}/km
         </Text>
 
-        {/* Stats */}
         <View style={styles.statsRow}>
           <View style={styles.statCard}>
             <Text style={styles.statLabel}>DURATION</Text>
@@ -530,7 +526,6 @@ export default function IntervalTracker() {
           </View>
         </View>
 
-        {/* Buttons */}
         <View style={styles.buttonGroup}>
           {phase === 'idle' && (
             <TouchableOpacity style={styles.mainBtn} onPress={handleStart}>
@@ -580,7 +575,6 @@ const styles = StyleSheet.create({
   },
   repDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: '#E0E0E0' },
 
-  // View biasa (bukan ScrollView) untuk layout yang rapi
   mainContent: {
     flex: 1,
     paddingHorizontal: 24,

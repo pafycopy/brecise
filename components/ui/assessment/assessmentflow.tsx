@@ -19,8 +19,8 @@ export default function AssessmentFlow({ visible, onClose }: Props) {
   const { setAssessment } = useAssessmentStore();
   const { addWorkout, clearGeneratedWorkouts } = useWorkoutStore();
 
-  const [flowStep,        setFlowStep]       = useState<FlowStep>('assessment');
-  const [assessmentData,  setAssessmentData] = useState<AssessmentData | null>(null);
+  const [flowStep,       setFlowStep]       = useState<FlowStep>('assessment');
+  const [assessmentData, setAssessmentData] = useState<AssessmentData | null>(null);
 
   const handleAssessmentComplete = (data: AssessmentData) => {
     setAssessmentData(data);
@@ -30,8 +30,8 @@ export default function AssessmentFlow({ visible, onClose }: Props) {
   const handleConfirmProgram = async (days: GeneratedDay[]) => {
     if (!assessmentData) return;
 
-    // Simpan assessment ke store
-    setAssessment(assessmentData);
+    // Simpan assessment ke store lokal + Supabase (otomatis karena setAssessment sudah diupdate)
+    await setAssessment(assessmentData);
 
     // Hapus program lama yang di-generate sebelumnya (manual workout tetap aman)
     await clearGeneratedWorkouts();

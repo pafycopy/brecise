@@ -1,11 +1,18 @@
-import React, { useRef, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Animated, Modal } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
-import { EducationTopic, EducationLesson } from '@/constants/educationdata';
-import { ExerciseCategory, EXERCISES } from '@/constants/strengthdata';
-import ExerciseCard from '@/components/ui/education/exercisecard';
-import EducationLessonDetail from '@/components/ui/education/educationlessondetail';
+import EducationLessonDetail from "@/components/ui/education/educationlessondetail";
+import ExerciseCard from "@/components/ui/education/exercisecard";
+import { EducationLesson, EducationTopic } from "@/constants/educationdata";
+import { ExerciseCategory, EXERCISES } from "@/constants/strengthdata";
+import { Ionicons } from "@expo/vector-icons";
+import React, { useRef, useState } from "react";
+import {
+  Animated,
+  Modal,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 type Props = {
   topic: EducationTopic;
@@ -14,32 +21,40 @@ type Props = {
 
 const StrengthScreen = ({ topic, onBack }: Props) => {
   const scrollY = useRef(new Animated.Value(0)).current;
-  const [selectedLesson, setSelectedLesson] = useState<EducationLesson | null>(null);
+  const [selectedLesson, setSelectedLesson] = useState<EducationLesson | null>(
+    null,
+  );
 
   const headerTitleOpacity = scrollY.interpolate({
-    inputRange: [60, 100], outputRange: [0, 1], extrapolate: 'clamp',
+    inputRange: [60, 100],
+    outputRange: [0, 1],
+    extrapolate: "clamp",
   });
 
   const getExerciseCount = (lessonTitle: string): string => {
     const categoryMap: Record<string, ExerciseCategory> = {
-      'Strength': 'Strength', 'Core': 'Core',
-      'Mobility': 'Mobility', 'Recovery': 'Recovery',
+      Strength: "Strength",
+      Core: "Core",
+      Mobility: "Mobility",
+      Recovery: "Recovery",
     };
     const cat = categoryMap[lessonTitle];
-    if (!cat) return '';
+    if (!cat) return "";
     const count = EXERCISES.filter((e) => e.category === cat).length;
     return `${count} Exercises`;
   };
 
   return (
     <SafeAreaView style={styles.safeArea}>
-
       {/* HEADER */}
       <View style={styles.header}>
         <TouchableOpacity onPress={onBack} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={22} color="#111" />
         </TouchableOpacity>
-        <Animated.Text numberOfLines={1} style={[styles.headerTitle, { opacity: headerTitleOpacity }]}>
+        <Animated.Text
+          numberOfLines={1}
+          style={[styles.headerTitle, { opacity: headerTitleOpacity }]}
+        >
           {topic.title}
         </Animated.Text>
         <View style={{ width: 36 }} />
@@ -51,10 +66,9 @@ const StrengthScreen = ({ topic, onBack }: Props) => {
         scrollEventThrottle={16}
         onScroll={Animated.event(
           [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-          { useNativeDriver: true }
+          { useNativeDriver: true },
         )}
       >
-
         {/* HERO CARD — dark background */}
         <View style={styles.heroCard}>
           {/* Badge */}
@@ -83,7 +97,6 @@ const StrengthScreen = ({ topic, onBack }: Props) => {
             onPress={() => setSelectedLesson(lesson)}
           />
         ))}
-
       </Animated.ScrollView>
 
       <Modal
@@ -101,7 +114,6 @@ const StrengthScreen = ({ topic, onBack }: Props) => {
           />
         )}
       </Modal>
-
     </SafeAreaView>
   );
 };
@@ -109,51 +121,79 @@ const StrengthScreen = ({ topic, onBack }: Props) => {
 export default StrengthScreen;
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#F5F5F5' },
+  safeArea: { flex: 1, backgroundColor: "#F5F5F5" },
 
   header: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 16, paddingVertical: 12,
-    borderBottomWidth: 1, borderBottomColor: '#F0F0F0', backgroundColor: '#F5F5F5',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#F0F0F0",
+    backgroundColor: "#F5F5F5",
   },
   backBtn: {
-    width: 36, height: 36, borderRadius: 18,
-    backgroundColor: '#EBEBEB', alignItems: 'center', justifyContent: 'center',
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#EBEBEB",
+    alignItems: "center",
+    justifyContent: "center",
   },
   headerTitle: {
-    flex: 1, textAlign: 'center', marginHorizontal: 8,
-    fontSize: 15, fontWeight: '700', color: '#111',
+    flex: 1,
+    textAlign: "center",
+    marginHorizontal: 8,
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#111",
+    fontFamily: "Lexend-Bold",
   },
 
   content: { padding: 16, paddingBottom: 40, gap: 16 },
 
   // ── Hero Card ──────────────────────────────────────────────────────────────
   heroCard: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 24,
     padding: 24,
     paddingBottom: 28,
     gap: 12,
   },
   heroBadge: {
-    alignSelf: 'flex-start',
-    backgroundColor: '#6BFF8F',
+    alignSelf: "flex-start",
+    backgroundColor: "#6BFF8F",
     borderRadius: 20,
     paddingHorizontal: 12,
     paddingVertical: 5,
   },
   heroBadgeText: {
-    fontSize: 11, fontWeight: '800', color: '#006E2F', letterSpacing: 1,
+    fontSize: 11,
+    fontWeight: "800",
+    color: "#006E2F",
+    letterSpacing: 1,
+    fontFamily: "Lexend-Black",
   },
   heroTitle: {
-    fontSize: 28, fontWeight: '900', color: '#111', lineHeight: 36,
+    fontSize: 28,
+    fontWeight: "900",
+    color: "#111",
+    lineHeight: 36,
+    fontFamily: "Lexend-Black",
   },
   heroDescription: {
-    fontSize: 14, lineHeight: 22, color: '#111',
+    fontSize: 14,
+    lineHeight: 22,
+    color: "#111",
+    fontFamily: "Lexend-Regular",
   },
 
   // ── Modul label ────────────────────────────────────────────────────────────
   modulLabel: {
-    fontSize: 18, fontWeight: '800', color: '#111',
+    fontSize: 18,
+    fontWeight: "800",
+    color: "#111",
+    fontFamily: "Lexend-Black",
   },
 });

@@ -4,10 +4,14 @@ import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import * as Linking from 'expo-linking';
 import * as SplashScreen from 'expo-splash-screen';
 import { useFonts } from 'expo-font';
-import { View, ActivityIndicator } from 'react-native';
-import { supabase, clearInvalidSession } from '@/lib/supabase'; // ← tambah clearInvalidSession
+import { View, ActivityIndicator, AppState, AppStateStatus } from 'react-native';
+import { supabase, clearInvalidSession } from '@/lib/supabase';
 import AssessmentFlow from '@/components/ui/assessment/assessmentflow';
 import { useAssessmentStore } from '@/store/assessmentStore';
+import { setupPurchaseListeners, initIAP, closeIAP, checkProStatus } from '@/lib/proService';
+import { useNotificationStore } from '@/store/notificationStore';
+import { useWorkoutStore } from '@/store/supabaseWorkoutStore';
+import { scheduleWeeklyReport } from '@/lib/notifications';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -22,40 +26,64 @@ export default function RootLayout() {
   const [isNavigationReady, setIsNavigationReady] = useState(false);
 
   const [fontsLoaded, fontError] = useFonts({
-    'Lexend-Bold':    require('../assets/font/static/Lexend-Bold.ttf'),
+    'Lexend-Bold': require('../assets/font/static/Lexend-Bold.ttf'),
     'Lexend-Regular': require('../assets/font/static/Lexend-Regular.ttf'),
-    'Lexend-Black':   require('../assets/font/static/Lexend-Black.ttf'),
+    'Lexend-Black': require('../assets/font/static/Lexend-Black.ttf'),
   });
+
+  // ── IAP setup ─────────────────────────────────────────────────────────────
+  useEffect(() => {
+    let cleanupListeners: (() => void) | undefined;
+
+    const setupIAP = async () => {
+      const connected = await initIAP();
+      if (connected) {
+        cleanupListeners = setupPurchaseListeners();
+      }
+    };
+
+    setupIAP();
+
+    return () => {
+      cleanupListeners?.();
+      closeIAP();
+    };
+  }, []);
 
   // ── Session ───────────────────────────────────────────────────────────────
   useEffect(() => {
     const initSession = async () => {
-      // ✅ Bersihkan session invalid (refresh token not found) sebelum getSession
       await clearInvalidSession();
-
       const { data } = await supabase.auth.getSession();
       setSession(data.session ?? null);
       setIsAuthLoading(false);
+
+      // Cek status Pro setelah session siap
+      if (data.session) {
+        checkProStatus();
+      }
     };
 
     initSession();
 
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      // Kalau event PASSWORD_RECOVERY, set flag reset & jangan update session biasa
       if (_event === 'PASSWORD_RECOVERY') {
         setIsResettingPassword(true);
         return;
       }
 
-      // Kalau lagi reset password, abaikan session update agar tidak redirect dashboard
       if (_event === 'SIGNED_IN' && isResettingPassword) {
         return;
       }
 
-      // ✅ Kalau SIGNED_OUT (termasuk karena token invalid), clear session
       if (_event === 'SIGNED_OUT') {
         setSession(null);
         return;
+      }
+
+      // Cek Pro setiap kali session berubah (login baru)
+      if (session) {
+        checkProStatus();
       }
 
       setSession(session ?? null);
@@ -124,6 +152,59 @@ export default function RootLayout() {
     }
   }, [session, isCompleted, isResettingPassword]);
 
+  // ── Refresh Laporan Mingguan ─────────────────────────────────────────────
+  // Karena notifikasi mingguan dijadwalkan secara lokal (expo-notifications),
+  // isinya tidak otomatis ter-update sendiri tiap minggu. Untuk meminimalkan
+  // data yang basi, kita hitung ulang & re-schedule setiap kali user
+  // membuka app (saat login sudah siap) dan setiap kali app kembali ke
+  // foreground. Ini bukan solusi real-time, tapi memastikan data selalu
+  // sefresh kunjungan terakhir user ke app.
+  useEffect(() => {
+    if (!session || isAuthLoading) return;
+
+    const refreshWeeklyReportIfNeeded = async () => {
+      const { weeklyReportEnabled } = useNotificationStore.getState();
+      if (!weeklyReportEnabled) return;
+
+      const { workoutsByDate } = useWorkoutStore.getState();
+
+      const now = new Date();
+      const sevenDaysAgo = new Date(now);
+      sevenDaysAgo.setDate(now.getDate() - 6); // termasuk hari ini = 7 hari
+      sevenDaysAgo.setHours(0, 0, 0, 0);
+
+      const weeklyWorkouts = Object.entries(workoutsByDate)
+        .filter(([dateKey]) => {
+          const date = new Date(dateKey);
+          return date >= sevenDaysAgo && date <= now;
+        })
+        .flatMap(([, workouts]) => workouts ?? []);
+
+      const completed = weeklyWorkouts.filter((w) => w.status === 'completed');
+      const totalSessions = completed.length;
+      const totalDistance = completed.reduce(
+        (sum, w) => sum + (w.trackingResult?.actualDistance ?? 0),
+        0
+      );
+
+      await scheduleWeeklyReport(totalSessions, Math.round(totalDistance * 10) / 10, 0);
+    };
+
+    // Refresh sekali saat app baru dibuka & session siap
+    refreshWeeklyReportIfNeeded();
+
+    // Refresh lagi setiap kali app kembali ke foreground (misal dari background)
+    const handleAppStateChange = (nextState: AppStateStatus) => {
+      if (nextState === 'active') {
+        refreshWeeklyReportIfNeeded();
+      }
+    };
+
+    const appStateSubscription = AppState.addEventListener('change', handleAppStateChange);
+
+    return () => appStateSubscription.remove();
+  }, [session, isAuthLoading]);
+
   // ── Handle close assessment ───────────────────────────────────────────────
   const handleAssessmentClose = () => {
     setShowAssessment(false);
@@ -141,6 +222,7 @@ export default function RootLayout() {
           <Stack.Screen name="settings" />
           <Stack.Screen name="about" />
           <Stack.Screen name="privacy" />
+          <Stack.Screen name="pro" />
         </Stack>
         <AssessmentFlow
           visible={showAssessment}

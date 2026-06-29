@@ -1,6 +1,7 @@
 import { AssessmentData, InjuryHistory } from "@/store/assessmentStore";
 import { WorkoutFormValues } from "@/components/ui/calendar/workoutformscreen";
 import { getDefaultPaceRange, formatPaceDisplay } from "@/constants/workoutformconfig";
+import { EXERCISES, makeDefaultSet, type Exercise } from "@/constants/strengthdata";
 
 // =========================
 // 1. Definisi Tipe Workout dan Zona Intensitas
@@ -86,6 +87,57 @@ const INJURY_AVOID: Record<InjuryHistory, WorkoutType[]> = {
 const WEEKLY_PROGRESS_FACTOR = [1.0, 1.1, 1.2, 1.1];
 
 // =========================
+// 2b. Strength Exercise Selection
+// =========================
+
+// Hanya exercise berkategori "Strength" yang dipakai untuk Strength Training
+// yang di-generate otomatis (Core/Mobility/Recovery dipakai di tempat lain,
+// misal halaman edukasi atau form manual).
+const STRENGTH_EXERCISES = EXERCISES.filter((e) => e.category === "Strength");
+
+// Jumlah exercise per sesi, disesuaikan level — makin tinggi level, makin
+// banyak variasi exercise yang dikerjakan dalam satu sesi.
+const EXERCISE_COUNT_BY_LEVEL: Record<string, number> = {
+  beginner: 3,
+  intermediate: 4,
+  advanced: 5,
+};
+
+// Pilih exercise strength untuk satu sesi, dengan rotasi berdasarkan weekNum
+// supaya tiap minggu dapat variasi exercise yang berbeda (bukan exercise
+// yang sama persis berulang selama 4 minggu program).
+const selectStrengthExercises = (
+  level: string,
+  weekNum: number,
+  setsCount: number,
+): NonNullable<WorkoutFormValues["selectedExercises"]> => {
+  if (STRENGTH_EXERCISES.length === 0) return [];
+
+  const count = Math.min(
+    EXERCISE_COUNT_BY_LEVEL[level] ?? 3,
+    STRENGTH_EXERCISES.length,
+  );
+  const total = STRENGTH_EXERCISES.length;
+  // Offset bergeser tiap minggu supaya rotasi exercise tidak monoton.
+  const offset = ((weekNum - 1) * count) % total;
+
+  const picked: Exercise[] = [];
+  for (let i = 0; i < count; i++) {
+    picked.push(STRENGTH_EXERCISES[(offset + i) % total]);
+  }
+
+  return picked.map((exercise) => ({
+    id: exercise.id,
+    name: exercise.name,
+    inputType: exercise.inputType,
+    gifUrl: exercise.gifUrl,
+    sets: Array.from({ length: setsCount }, (_, i) =>
+      makeDefaultSet(exercise, i + 1),
+    ),
+  }));
+};
+
+// =========================
 // 3. Helper Functions
 // =========================
 
@@ -117,13 +169,20 @@ const makeWorkout = (type: WorkoutType, weekNum: number, assessment: AssessmentD
   // ── Strength Training ──────────────────────────────────────────────────────
   if (type === "Strength Training") {
     const sets = level === "beginner" ? 2 : level === "intermediate" ? 3 : 4;
+    const setsCount = Math.max(1, Math.round(sets * injuryFactor));
+
     return {
       workoutType: "Strength Training", workoutName: "Strength Training",
       distance: "", pace: "", paceMin: 0, paceMax: 0,
-      sets: String(Math.max(1, Math.round(sets * injuryFactor))),
+      sets: String(setsCount),
       reps: "10", restTime: "90", weight: "",
       duration: { hour: 0, min: 30, sec: 0 },
-      trainingCategory: "Strength", selectedExercises: [], isGenerated: true,
+      trainingCategory: "Strength",
+      // ✅ FIX: sebelumnya selalu [] — sekarang diisi dari STRENGTH_EXERCISES,
+      // dengan jumlah set per exercise mengikuti setsCount yang sudah
+      // dihitung sesuai level & injuryFactor di atas.
+      selectedExercises: selectStrengthExercises(level, weekNum, setsCount),
+      isGenerated: true,
     };
   }
 

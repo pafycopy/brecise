@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useRouter } from 'expo-router';
+import { useRouter } from 'expo-router'; 
 import { supabase } from '@/lib/supabase';
 
 export default function Index() {

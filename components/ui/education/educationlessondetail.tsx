@@ -298,30 +298,30 @@ const d = StyleSheet.create({
     paddingHorizontal: 16, paddingVertical: 12,
   },
   backBtn: {
-    width: 36, height: 36, borderRadius: 18,
+    width: 36, height: 36, borderRadius: 18, fontFamily: 'Lexend-Regular',
     backgroundColor: '#F0F0F0', alignItems: 'center', justifyContent: 'center',
   },
-  content: { paddingHorizontal: 20, paddingBottom: 48, gap: 20 },
-  exerciseName: { fontSize: 34, fontWeight: '900', color: '#111', textAlign: 'center' },
+  content: { paddingHorizontal: 20, paddingBottom: 48, gap: 20, fontFamily: 'Lexend-Regular' },
+  exerciseName: { fontSize: 34, fontWeight: '900', color: '#111', textAlign: 'center', fontFamily: 'Lexend-Black' },
   mediaBox: {
     height: 200, borderRadius: 16, backgroundColor: '#F0F0F0',
     alignItems: 'center', justifyContent: 'center',
   },
   mediaImage: { width: '100%', height: 200, borderRadius: 16 },
   card: {
-    backgroundColor: '#FFF', borderRadius: 20, padding: 20, gap: 16,
+    backgroundColor: '#FFF', borderRadius: 20, padding: 20, gap: 16, fontFamily: 'Lexend-Regular',
     shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 10, elevation: 2,
   },
-  description: { fontSize: 15, lineHeight: 24, color: '#444', textAlign: 'center' },
-  descBold: { fontWeight: '700', color: '#111' },
+  description: { fontSize: 15, lineHeight: 24, color: '#444', textAlign: 'center', fontFamily: 'Lexend-Regular' },
+  descBold: { fontWeight: '700', color: '#111', fontFamily: 'Lexend-Bold' },
   section: { gap: 14, alignItems: 'center' },
   sectionLabelRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
-  sectionLabel: { fontSize: 12, fontWeight: '800', color: '#888', letterSpacing: 1, textAlign: 'center' },
+  sectionLabel: { fontSize: 12, fontWeight: '800', color: '#888', letterSpacing: 1, textAlign: 'center', fontFamily: 'Lexend-Black' },
   tagWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: 'center' },
   tag: { borderRadius: 20, paddingHorizontal: 16, paddingVertical: 8, borderWidth: 1.5, borderColor: '#E0E0E0' },
-  tagText: { fontSize: 13, fontWeight: '600', color: '#333' },
+  tagText: { fontSize: 13, fontWeight: '600', color: '#333', fontFamily: 'Lexend-Bold' },
   benefitRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, width: '100%', paddingHorizontal: 30 },
-  benefitText: { flex: 1, fontSize: 15, color: '#333', fontWeight: '500', lineHeight: 22 },
+  benefitText: { flex: 1, fontSize: 15, color: '#333', fontWeight: '500', lineHeight: 22, fontFamily: 'Lexend-Regular' },
   divider: { height: 1, backgroundColor: '#F0F0F0' },
 });
 
@@ -345,14 +345,14 @@ const s = StyleSheet.create({
     shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 8, elevation: 2,
   },
   decoCircle1: {
-    position: 'absolute', width: 160, height: 160, borderRadius: 80,
+    position: 'absolute', width: 160, height: 160, borderRadius: 80, fontFamily: 'Lexend-Regular',
     top: -40, right: -30,
   },
   decoCircle2: {
     position: 'absolute', width: 100, height: 100, borderRadius: 50,
     top: 30, right: 80,
   },
-  heroTitle: { fontSize: 22, fontWeight: '800', color: '#111', lineHeight: 30 },
+  heroTitle: { fontSize: 22, fontWeight: '800', color: '#111', lineHeight: 30, fontFamily: 'Lexend-Black' },
   heroBadgeRow: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
   heroBadgeLevel: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
@@ -360,14 +360,14 @@ const s = StyleSheet.create({
     backgroundColor: '#F0F0F0',
   },
   heroBadgeDot: { width: 8, height: 8, borderRadius: 4 },
-  heroBadgeLevelText: { fontSize: 13, fontWeight: '600', color: '#111' },
+  heroBadgeLevelText: { fontSize: 13, fontWeight: '600', color: '#111', fontFamily: 'Lexend-Bold' },
   heroBadgeFreq: {
     paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20,
     borderWidth: 1.5, borderColor: '#E0E0E0', backgroundColor: '#fff',
   },
-  heroBadgeFreqText: { fontSize: 13, fontWeight: '600', color: '#333' },
+  heroBadgeFreqText: { fontSize: 13, fontWeight: '600', color: '#333', fontFamily: 'Lexend-Bold' },
   heroBenefits: { gap: 10, marginTop: 2 },
-  heroBenefitText: { fontSize: 14, color: '#555', lineHeight: 22 },
+  heroBenefitText: { fontSize: 14, color: '#555', lineHeight: 22, fontFamily: 'Lexend-Regular' },
 
   // Tab
   tabScroll: { marginBottom: 4 },
@@ -378,8 +378,8 @@ const s = StyleSheet.create({
     borderWidth: 1, borderColor: '#E0E0E0',
   },
   tabBtnActive: { backgroundColor: '#111', borderColor: '#111' },
-  tabText: { fontSize: 13, fontWeight: '600', color: '#555' },
-  tabTextActive: { color: '#FFF' },
+  tabText: { fontSize: 13, fontWeight: '600', color: '#555', fontFamily: 'Lexend-Bold' },
+  tabTextActive: { color: '#FFF', fontFamily: 'Lexend-Bold' },
 
   // Exercise row — simple sesuai referensi
   exerciseRow: {
@@ -388,7 +388,7 @@ const s = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
   },
   exerciseLeft: { flex: 1 },
-  exerciseName: { fontSize: 16, fontWeight: '700', color: '#111' },
+  exerciseName: { fontSize: 16, fontWeight: '700', color: '#111', fontFamily: 'Lexend-Bold' },
   viewDetailBtn: { flexDirection: 'row', alignItems: 'center', gap: 2 },
-  viewDetailText: { fontSize: 13, fontWeight: '500', color: '#888' },
+  viewDetailText: { fontSize: 13, fontWeight: '500', color: '#888', fontFamily: 'Lexend-Regular' },
 });

@@ -1,17 +1,17 @@
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { useState } from 'react';
-import { Ionicons } from '@expo/vector-icons';
-import { useWorkoutStore } from '@/store/supabaseWorkoutStore';
+import { useWorkoutStore } from "@/store/supabaseWorkoutStore";
+import { Ionicons } from "@expo/vector-icons";
+import { useState } from "react";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
-const DAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+const DAYS = ["S", "M", "T", "W", "T", "F", "S"];
 
 const toKey = (year: number, month: number, day: number) => {
-  const mm = String(month + 1).padStart(2, '0');
-  const dd = String(day).padStart(2, '0');
+  const mm = String(month + 1).padStart(2, "0");
+  const dd = String(day).padStart(2, "0");
   return `${year}-${mm}-${dd}`;
 };
 
-type DayStatus = 'completed' | 'missed' | 'planned' | 'today' | 'normal';
+type DayStatus = "completed" | "missed" | "planned" | "today" | "normal";
 
 const ActivityCalendar = () => {
   const { workoutsByDate } = useWorkoutStore();
@@ -19,15 +19,15 @@ const ActivityCalendar = () => {
   today.setHours(0, 0, 0, 0);
 
   const [viewDate, setViewDate] = useState(
-    new Date(today.getFullYear(), today.getMonth(), 1)
+    new Date(today.getFullYear(), today.getMonth(), 1),
   );
 
   const year = viewDate.getFullYear();
   const month = viewDate.getMonth();
 
-  const monthName = viewDate.toLocaleDateString('en-US', {
-    month: 'long',
-    year: 'numeric',
+  const monthName = viewDate.toLocaleDateString("en-US", {
+    month: "long",
+    year: "numeric",
   });
 
   const firstDay = new Date(year, month, 1).getDay();
@@ -45,12 +45,12 @@ const ActivityCalendar = () => {
     const isToday = cellDate.getTime() === today.getTime();
     const isPast = cellDate < today;
 
-    if (workouts.length === 0) return isToday ? 'today' : 'normal';
+    if (workouts.length === 0) return isToday ? "today" : "normal";
 
-    const hasCompleted = workouts.some((w) => w.status === 'completed');
-    if (hasCompleted) return 'completed';
-    if (isPast && !isToday) return 'missed';
-    return isToday ? 'today' : 'planned';
+    const hasCompleted = workouts.some((w) => w.status === "completed");
+    if (hasCompleted) return "completed";
+    if (isPast && !isToday) return "missed";
+    return isToday ? "today" : "planned";
   };
 
   const cells: (number | null)[] = [
@@ -62,18 +62,18 @@ const ActivityCalendar = () => {
   // Map status ke style yang sudah terdaftar di StyleSheet
   const dayCellStyleMap: Record<DayStatus, object> = {
     completed: styles.cellCompleted,
-    missed:    styles.cellMissed,
-    planned:   styles.cellPlanned,
-    today:     styles.cellToday,
-    normal:    styles.cellNormal,
+    missed: styles.cellMissed,
+    planned: styles.cellPlanned,
+    today: styles.cellToday,
+    normal: styles.cellNormal,
   };
 
   const dayTextStyleMap: Record<DayStatus, object> = {
     completed: styles.textLight,
-    missed:    styles.textLight,
-    planned:   styles.textGreen,
-    today:     styles.textLight,
-    normal:    styles.textDark,
+    missed: styles.textLight,
+    planned: styles.textGreen,
+    today: styles.textLight,
+    normal: styles.textDark,
   };
 
   return (
@@ -92,7 +92,9 @@ const ActivityCalendar = () => {
 
       <View style={styles.dayRow}>
         {DAYS.map((d, i) => (
-          <Text key={i} style={styles.dayLabel}>{d}</Text>
+          <Text key={i} style={styles.dayLabel}>
+            {d}
+          </Text>
         ))}
       </View>
 
@@ -140,66 +142,72 @@ const styles = StyleSheet.create({
   container: {
     marginHorizontal: 16,
     marginVertical: 8,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#F0F0F0',
+    borderColor: "#F0F0F0",
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 12,
   },
-  monthText: { fontSize: 15, fontWeight: '700', color: '#1A1A1A' },
-  navRow: { flexDirection: 'row', gap: 4 },
+  monthText: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#1A1A1A",
+    fontFamily: "Lexend-Bold",
+  },
+  navRow: { flexDirection: "row", gap: 4 },
   navBtn: { padding: 4 },
-  dayRow: { flexDirection: 'row', marginBottom: 6 },
+  dayRow: { flexDirection: "row", marginBottom: 6 },
   dayLabel: {
     flex: 1,
-    textAlign: 'center',
+    textAlign: "center",
     fontSize: 11,
-    color: '#999',
-    fontWeight: '600',
+    color: "#999",
+    fontFamily: "Lexend-Bold",
+    fontWeight: "600",
   },
-  weekRow: { flexDirection: 'row', marginBottom: 4 },
-  cell: { flex: 1, alignItems: 'center' },
+  weekRow: { flexDirection: "row", marginBottom: 4 },
+  cell: { flex: 1, alignItems: "center" },
 
   // Base — borderRadius WAJIB ada di sini dan di setiap cellXxx
   dayCell: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
 
   // Status cells — semuanya punya borderRadius: 16 eksplisit
-  cellNormal:    { borderRadius: 6 },
-  cellCompleted: { borderRadius: 6, backgroundColor: '#2E7D32' },
-  cellMissed:    { borderRadius: 6, backgroundColor: '#FF9800' },
-  cellPlanned:   { borderRadius: 6, backgroundColor: '#6BFF8F' },
-  cellToday:     { borderRadius: 6, backgroundColor: '#1A1A1A' },
+  cellNormal: { borderRadius: 6 },
+  cellCompleted: { borderRadius: 6, backgroundColor: "#2E7D32" },
+  cellMissed: { borderRadius: 6, backgroundColor: "#FF9800" },
+  cellPlanned: { borderRadius: 6, backgroundColor: "#6BFF8F" },
+  cellToday: { borderRadius: 6, backgroundColor: "#1A1A1A" },
 
   // Text
-  dayNumber: { fontSize: 12, fontWeight: '500' },
-  textLight: { color: '#fff', fontWeight: '700' },
-  textGreen: { color: '#2E7D32', fontWeight: '600' },
-  textDark:  { color: '#333', fontWeight: '500' },
+  dayNumber: { fontSize: 12, fontWeight: "500", fontFamily: "Lexend-Regular" },
+  textLight: { color: "#fff", fontWeight: "700", fontFamily: "Lexend-Bold" },
+  textGreen: { color: "#2E7D32", fontWeight: "600", fontFamily: "Lexend-Bold" },
+  textDark: { color: "#333", fontWeight: "500", fontFamily: "Lexend-Regular" },
 
   // Legend
   legend: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 12,
     marginTop: 10,
-    justifyContent: 'flex-end',
-    flexWrap: 'wrap',
+    justifyContent: "flex-end",
+    flexWrap: "wrap",
   },
-  legendItem: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  legendDot:  { width: 10, height: 10, borderRadius: 5 },
-  dotCompleted: { backgroundColor: '#2E7D32' },
-  dotPlanned:   { backgroundColor: '#6BFF8F' },
-  dotMissed:    { backgroundColor: '#FF9800' },
-  legendText: { fontSize: 11, color: '#888' },
+  legendItem: { flexDirection: "row", alignItems: "center", gap: 5 },
+  legendDot: { width: 10, height: 10, borderRadius: 5 },
+  dotCompleted: { backgroundColor: "#2E7D32" },
+  dotPlanned: { backgroundColor: "#6BFF8F" },
+  dotMissed: { backgroundColor: "#FF9800" },
+  legendText: { fontSize: 11, color: "#888", fontFamily: "Lexend-Regular" },
 });

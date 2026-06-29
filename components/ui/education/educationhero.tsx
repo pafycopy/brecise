@@ -29,14 +29,14 @@ const styles = StyleSheet.create({
 
   title: {
     fontSize: 28,
-    fontWeight: '700',
+    fontWeight: '700', fontFamily: 'Lexend-Bold',
     color: '#111',
     marginBottom: 10,
   },
 
   description: {
     fontSize: 14,
-    lineHeight: 22,
+    lineHeight: 22, fontFamily: 'Lexend-Regular',
     color: '#666',
     marginBottom: 16,
   },
@@ -54,7 +54,7 @@ const styles = StyleSheet.create({
 
   buttonText: {
     color: '#fff',
-    fontWeight: '600',
+    fontWeight: '600', fontFamily: 'Lexend-Bold',
     fontSize: 12,
   },
 })

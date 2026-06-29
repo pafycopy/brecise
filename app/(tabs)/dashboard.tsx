@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
+import React, { useEffect } from 'react';
+import { View, StyleSheet, ScrollView, Text } from 'react-native';
 import { useRouter } from 'expo-router';
 import Header from '@/components/header';
 import { Colors } from '@/constants/theme';
@@ -13,10 +13,13 @@ import RecentActivityCard  from '@/components/ui/dashboard/recentactivitycard';
 import BannerAdComponent   from '@/components/ui/ads/bannerads';
 import { useDashboardStats } from '@/hooks/usedashboardstats';
 import { useUIEducationStore } from '@/store/uieducationstore';
+import { useProStore } from '@/store/proStore';
+import { checkProStatus } from '@/lib/proService';
 
 const Dashboard = () => {
   const router = useRouter();
   const { openTopic } = useUIEducationStore();
+  const isPro = useProStore((s) => s.isPro);
 
   const {
     dataByPeriod,
@@ -30,6 +33,11 @@ const Dashboard = () => {
     weeklyLabel,
     tip,
   } = useDashboardStats();
+
+  // Cek status Pro setiap kali dashboard dibuka
+  useEffect(() => {
+    checkProStatus();
+  }, []);
 
   const handleTipPress = () => {
     openTopic(tip.topicId);
@@ -80,8 +88,8 @@ const Dashboard = () => {
         />
       </ScrollView>
 
-      {/* Banner AdMob fixed di bawah layar */}
-      <BannerAdComponent />
+      {/* Banner AdMob — disembunyikan untuk pengguna Pro */}
+      {!isPro && <BannerAdComponent />}
     </View>
   );
 };

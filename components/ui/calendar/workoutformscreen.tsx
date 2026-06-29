@@ -42,7 +42,18 @@ export type WorkoutFormValues = {
   selectedExercises?: Array<{
     id: string;
     name: string;
-    sets: Array<{ set: number; reps: string; }>;
+    // ✅ FIX: ditambahkan supaya konsisten dengan data yang dibutuhkan
+    // StrengthTracker.tsx (GIF & timer untuk exercise bertipe 'duration').
+    // Optional, supaya tidak breaking untuk data lama yang belum punya field ini.
+    inputType?: 'reps' | 'duration';
+    gifUrl?: string;
+    sets: Array<{
+      set: number;
+      reps: string;
+      // ✅ FIX: ditambahkan agar exercise bertipe 'duration' (misal Plank,
+      // Single Leg Balance) bisa membawa durasi targetnya, bukan cuma reps.
+      duration?: string;
+    }>;
   }>;
 };
 

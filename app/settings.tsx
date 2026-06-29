@@ -6,6 +6,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import * as Notifications from 'expo-notifications';
 import { useNotificationStore } from '@/store/notificationStore';
 import {
   scheduleWorkoutReminders,
@@ -17,6 +18,12 @@ import {
 } from '@/lib/notifications';
 import { useWorkoutStore } from '@/store/supabaseWorkoutStore';
 import { supabase } from '@/lib/supabase';
+
+// ⚠️ WAJIB diubah ke false sebelum build untuk Play Store!
+// DEV_MODE = true menampilkan section "Developer Testing" di Pengaturan,
+// dipakai untuk mengirim contoh notifikasi instan (5 detik) tanpa harus
+// menunggu jadwal asli (jam tertentu / hari Minggu).
+const DEV_MODE = false;
 
 export default function SettingsScreen() {
   const {
@@ -37,6 +44,26 @@ export default function SettingsScreen() {
 
   const getAllWorkouts = () => {
     return Object.values(workoutsByDate).flat();
+  };
+
+  // Ambil hanya workout dalam 7 hari terakhir (termasuk hari ini).
+  // Dipakai untuk "Laporan Mingguan" (toggle asli & tombol test) agar
+  // datanya benar-benar mencerminkan aktivitas minggu ini, bukan akumulasi
+  // sejak awal pakai app.
+  const getWeeklyWorkouts = () => {
+    const now = new Date();
+    const sevenDaysAgo = new Date(now);
+    sevenDaysAgo.setDate(now.getDate() - 6); // termasuk hari ini = total 7 hari
+    sevenDaysAgo.setHours(0, 0, 0, 0);
+
+    const result: ReturnType<typeof getAllWorkouts> = [];
+    Object.entries(workoutsByDate).forEach(([dateKey, workouts]) => {
+      const date = new Date(dateKey);
+      if (date >= sevenDaysAgo && date <= now) {
+        result.push(...(workouts ?? []));
+      }
+    });
+    return result;
   };
 
   const getWorkoutWeekdays = (): number[] => {
@@ -122,8 +149,9 @@ export default function SettingsScreen() {
         return;
       }
 
-      const all = getAllWorkouts();
-      const completed = all.filter(w => w.status === 'completed');
+      // ✅ FIX: pakai data 7 hari terakhir, bukan seluruh histori.
+      const weekly = getWeeklyWorkouts();
+      const completed = weekly.filter(w => w.status === 'completed');
       const totalSessions = completed.length;
       const totalDistance = completed.reduce(
         (sum, w) => sum + (w.trackingResult?.actualDistance ?? 0),
@@ -137,7 +165,10 @@ export default function SettingsScreen() {
       );
       if (success) {
         setWeeklyReport(true);
-        Alert.alert('Laporan Mingguan Aktif', 'Kamu akan menerima ringkasan latihan setiap Minggu');
+        Alert.alert(
+          'Laporan Mingguan Aktif',
+          'Kamu akan menerima ringkasan latihan setiap Minggu pukul 08:00.',
+        );
       }
     } else {
       await cancelWeeklyReport();
@@ -155,6 +186,79 @@ export default function SettingsScreen() {
       await scheduleWorkoutReminders(weekdays, tempHour, tempMinute, workoutsByWeekday);
       Alert.alert('Waktu Diperbarui', `Pengingat diperbarui ke pukul ${String(tempHour).padStart(2, '0')}:${String(tempMinute).padStart(2, '0')}.`);
     }
+  };
+
+  // ── DEV: Test notif ───────────────────────────────────────────────────────
+  // Trigger TIME_INTERVAL (5 detik) supaya notif langsung muncul tanpa
+  // menunggu jadwal asli. Identifier beda dari notif asli (diawali
+  // 'dev-test-'), jadi tidak akan menimpa/mengganggu jadwal yang aktif.
+  const handleTestWorkoutNotif = async () => {
+    const granted = await requestNotificationPermission();
+    if (!granted) { Alert.alert('Izin notifikasi belum diberikan'); return; }
+
+    await Notifications.scheduleNotificationAsync({
+      identifier: 'dev-test-workout',
+      content: {
+        title: '🏃 Easy Run & Strength Training',
+        body: 'Latihan hari ini: Easy Run & Strength. Ayo siapkan diri dan jaga konsistensi Anda!',
+        sound: true,
+        data: { type: 'workout_reminder' },
+      },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+        seconds: 5,
+        repeats: false,
+      },
+    });
+    Alert.alert('✅ Test dikirim', 'Notifikasi pengingat latihan akan muncul dalam 5 detik.\nKeluar dari app untuk melihatnya.');
+  };
+
+  const handleTestWeeklyReport = async () => {
+    const granted = await requestNotificationPermission();
+    if (!granted) { Alert.alert('Izin notifikasi belum diberikan'); return; }
+
+    // ✅ Pakai data mingguan yang sama dengan yang dipakai toggle asli,
+    // supaya hasil test merepresentasikan apa yang akan benar-benar
+    // diterima user, bukan angka all-time yang bisa menyesatkan.
+    const weekly = getWeeklyWorkouts();
+    const completed = weekly.filter(w => w.status === 'completed');
+    const totalSessions = completed.length;
+    const totalDistance = completed.reduce(
+      (sum, w) => sum + (w.trackingResult?.actualDistance ?? 0), 0
+    );
+
+    await Notifications.scheduleNotificationAsync({
+      identifier: 'dev-test-weekly-report',
+      content: {
+        title: '📊 Laporan Mingguan Anda Sudah Siap',
+        body: `Minggu yang luar biasa! Anda telah menyelesaikan ${totalSessions} sesi latihan dengan total jarak ${Math.round(totalDistance * 10) / 10} km. Lihat progres lengkap sekarang.`,
+        sound: true,
+        data: { type: 'weekly_report' },
+      },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+        seconds: 5,
+        repeats: false,
+      },
+    });
+    Alert.alert(
+      '✅ Test dikirim',
+      `Data minggu ini: ${totalSessions} sesi, ${Math.round(totalDistance * 10) / 10} km.\nNotifikasi muncul dalam 5 detik. Keluar dari app untuk melihatnya.`
+    );
+  };
+
+  // Lihat semua notifikasi yang sedang terjadwal di device — untuk
+  // memastikan tidak ada duplikat/identifier nyasar setelah berkali-kali test.
+  const handleDebugScheduled = async () => {
+    const scheduled = await Notifications.getAllScheduledNotificationsAsync();
+    if (scheduled.length === 0) {
+      Alert.alert('Tidak Ada Notifikasi Terjadwal', 'Belum ada notifikasi yang dijadwalkan di device ini.');
+      return;
+    }
+    const summary = scheduled
+      .map(n => `• ${n.identifier}\n  "${n.content.title}"`)
+      .join('\n\n');
+    Alert.alert(`Terjadwal (${scheduled.length})`, summary);
   };
 
   const formatTime = (h: number, m: number) =>
@@ -215,6 +319,40 @@ export default function SettingsScreen() {
             thumbColor="#FFF"
           />
         </View>
+
+        {/* ── DEV TESTING ── */}
+        {DEV_MODE && (
+          <>
+            <Text style={styles.sectionLabel}>🛠 Developer Testing</Text>
+
+            <TouchableOpacity style={styles.devBtn} onPress={handleTestWorkoutNotif}>
+              <Ionicons name="fitness-outline" size={18} color="#2E7D32" />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.devBtnTitle}>Test Notif Pengingat Latihan</Text>
+                <Text style={styles.devBtnSub}>Muncul 5 detik setelah tap</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={16} color="#CCC" />
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.devBtn} onPress={handleTestWeeklyReport}>
+              <Ionicons name="bar-chart-outline" size={18} color="#2E7D32" />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.devBtnTitle}>Test Laporan Mingguan</Text>
+                <Text style={styles.devBtnSub}>Pakai data 7 hari terakhir — muncul 5 detik</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={16} color="#CCC" />
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.devBtn} onPress={handleDebugScheduled}>
+              <Ionicons name="list-outline" size={18} color="#666" />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.devBtnTitle}>Lihat Notifikasi Terjadwal</Text>
+                <Text style={styles.devBtnSub}>Cek identifier & isi notif aktif di device</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={16} color="#CCC" />
+            </TouchableOpacity>
+          </>
+        )}
 
         {/* ── INFORMASI ── */}
         <Text style={styles.sectionLabel}>Informasi</Text>
@@ -300,13 +438,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16, paddingVertical: 0,
   },
   backBtn: { width: 32, height: 32, alignItems: 'flex-start', justifyContent: 'center' },
-  headerTitle: { fontSize: 17, fontWeight: '700', color: '#111' },
+  headerTitle: { fontSize: 17, fontWeight: '700', color: '#111', fontFamily: 'Lexend-Bold' },
 
   content: { paddingHorizontal: 16, paddingTop: 8 },
 
   sectionLabel: {
     fontSize: 13, color: '#999',
-    marginTop: 20, marginBottom: 8,
+    marginTop: 20, marginBottom: 8, fontFamily: 'Lexend-Regular',
   },
 
   row: {
@@ -314,9 +452,19 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 12,
   },
-  rowTitle: { fontSize: 15, fontWeight: '700', color: '#111' },
-  rowTitleBold: { fontSize: 15, fontWeight: '700', color: '#111' },
-  rowSub: { fontSize: 12, color: '#999', marginTop: 2 },
+  rowTitle: { fontSize: 15, fontWeight: '700', color: '#111', fontFamily: 'Lexend-Bold' },
+  rowTitleBold: { fontSize: 15, fontWeight: '700', color: '#111', fontFamily: 'Lexend-Bold' },
+  rowSub: { fontSize: 12, color: '#999', marginTop: 2, fontFamily: 'Lexend-Regular' },
+
+  devBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    paddingVertical: 12, paddingHorizontal: 14,
+    backgroundColor: '#F0FFF4',
+    borderRadius: 12, marginBottom: 8,
+    borderWidth: 1, borderColor: '#CDE9D2',
+  },
+  devBtnTitle: { fontSize: 14, fontWeight: '700', color: '#1B2E1F', fontFamily: 'Lexend-Bold' },
+  devBtnSub: { fontSize: 11, color: '#666', marginTop: 1, fontFamily: 'Lexend-Regular' },
 
   modalOverlay: {
     flex: 1, backgroundColor: 'rgba(0,0,0,0.4)',
@@ -326,8 +474,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFF', borderTopLeftRadius: 24, borderTopRightRadius: 24,
     padding: 28, paddingBottom: 40,
   },
-  modalTitle: { fontSize: 18, fontWeight: '800', color: '#111', textAlign: 'center' },
-  modalSub: { fontSize: 13, color: '#888', textAlign: 'center', marginTop: 4, marginBottom: 28 },
+  modalTitle: { fontSize: 18, fontWeight: '800', color: '#111', textAlign: 'center', fontFamily: 'Lexend-Black' },
+  modalSub: { fontSize: 13, color: '#888', textAlign: 'center', marginTop: 4, marginBottom: 28, fontFamily: 'Lexend-Regular' },
 
   timeRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 16, marginBottom: 32 },
   timeCol: { alignItems: 'center', gap: 12 },
@@ -339,10 +487,10 @@ const styles = StyleSheet.create({
     flex: 1, paddingVertical: 14, borderRadius: 14,
     backgroundColor: '#F5F5F5', alignItems: 'center',
   },
-  modalBtnCancelText: { fontSize: 15, fontWeight: '600', color: '#666' },
+  modalBtnCancelText: { fontSize: 15, fontWeight: '600', color: '#666', fontFamily: 'Lexend-Bold' },
   modalBtnSave: {
     flex: 1, paddingVertical: 14, borderRadius: 14,
     backgroundColor: '#6BFF8F', alignItems: 'center',
   },
-  modalBtnSaveText: { fontSize: 15, fontWeight: '800', color: '#111' },
+  modalBtnSaveText: { fontSize: 15, fontWeight: '800', color: '#111', fontFamily: 'Lexend-Black' },
 });

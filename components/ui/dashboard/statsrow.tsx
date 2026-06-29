@@ -50,7 +50,7 @@ export default function StatsRow({ totalWorkout, totalDistance, dataByPeriod }: 
       <View style={styles.container}>
         {/* Card Workout */}
         <View style={styles.card}>
-          <Text style={styles.label}>TOTAL WORKOUT</Text>
+          <Text style={styles.label}>TOTAL LATIHAN</Text>
           <View style={styles.valueRow}>
             <Text style={styles.value}>{workout}</Text>
             <Ionicons name="barbell-sharp" size={28} color="#4CD964" style={styles.icon} />

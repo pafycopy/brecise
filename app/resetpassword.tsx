@@ -206,7 +206,7 @@ const styles = StyleSheet.create({
     flex: 1, alignItems: 'center', justifyContent: 'center',
     paddingHorizontal: 32, gap: 16,
   },
-  waitingText: { fontSize: 14, color: '#888', marginTop: 8 },
+  waitingText: { fontSize: 14, color: '#888', marginTop: 8, fontFamily: 'Lexend-Regular' },
 
   successIcon: {
     width: 96, height: 96, borderRadius: 48,
@@ -214,8 +214,8 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
     marginBottom: 8,
   },
-  successTitle: { fontSize: 22, fontWeight: '800', color: '#111', textAlign: 'center' },
-  successSubtitle: { fontSize: 14, color: '#888', textAlign: 'center', lineHeight: 22 },
+  successTitle: { fontSize: 22, fontWeight: '800', color: '#111', textAlign: 'center', fontFamily: 'Lexend-Black' },
+  successSubtitle: { fontSize: 14, color: '#888', textAlign: 'center', lineHeight: 22, fontFamily: 'Lexend-Regular' },
 
   formContainer: { paddingHorizontal: 24, paddingTop: 40, paddingBottom: 40 },
 
@@ -225,20 +225,20 @@ const styles = StyleSheet.create({
     backgroundColor: '#111', alignItems: 'center', justifyContent: 'center',
     position: 'relative',
   },
-  logoText: { fontSize: 44, fontWeight: '900', color: '#FFFFFF', lineHeight: 52 },
+  logoText: { fontSize: 44, fontWeight: '900', color: '#FFFFFF', lineHeight: 52, fontFamily: 'Lexend-Black' },
   logoDumbbell: {
     position: 'absolute', top: -8, right: -8,
     backgroundColor: '#111', borderRadius: 20, padding: 4,
   },
-  appName: { fontSize: 20, fontWeight: '800', color: '#111' },
+  appName: { fontSize: 20, fontWeight: '800', color: '#111', fontFamily: 'Lexend-Black' },
 
   header: { marginBottom: 28, gap: 8 },
-  title: { fontSize: 22, fontWeight: '800', color: '#111', textAlign: 'center' },
-  subtitle: { fontSize: 14, color: '#888', textAlign: 'center', lineHeight: 22 },
+  title: { fontSize: 22, fontWeight: '800', color: '#111', textAlign: 'center', fontFamily: 'Lexend-Black' },
+  subtitle: { fontSize: 14, color: '#888', textAlign: 'center', lineHeight: 22, fontFamily: 'Lexend-Regular' },
 
   fields: { gap: 16, marginBottom: 20 },
   fieldGroup: { gap: 6 },
-  fieldLabel: { fontSize: 12, fontWeight: '700', color: '#555', letterSpacing: 0.3 },
+  fieldLabel: { fontSize: 12, fontWeight: '700', color: '#555', letterSpacing: 0.3, fontFamily: 'Lexend-Bold' },
 
   inputRow: {
     flexDirection: 'row', alignItems: 'center',
@@ -248,8 +248,8 @@ const styles = StyleSheet.create({
   },
   inputError: { borderColor: '#FF6B6B' },
   inputIcon: { marginRight: 10 },
-  input: { flex: 1, fontSize: 15, color: '#111' },
-  errorText: { fontSize: 11, color: '#FF6B6B', fontWeight: '600' },
+  input: { flex: 1, fontSize: 15, color: '#111', fontFamily: 'Lexend-Regular' },
+  errorText: { fontSize: 11, color: '#FF6B6B', fontWeight: '600', fontFamily: 'Lexend-Bold' },
 
   btnPrimary: {
     backgroundColor: '#6BFF8F', borderRadius: 40,
@@ -257,5 +257,5 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
   btnDisabled: { opacity: 0.6 },
-  btnPrimaryText: { fontSize: 15, fontWeight: '800', color: '#111' },
+  btnPrimaryText: { fontSize: 15, fontWeight: '800', color: '#111', fontFamily: 'Lexend-Black' },
 });

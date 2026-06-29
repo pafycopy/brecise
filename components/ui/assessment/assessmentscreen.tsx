@@ -27,7 +27,7 @@ const ProgressBar = ({ step }: { step: number }) => (
 
 const pb = StyleSheet.create({
   container: { gap: 6, marginBottom: 24 },
-  label:     { fontSize: 10, fontWeight: '700', color: '#AAA', letterSpacing: 0.8 },
+  label:     { fontSize: 10, fontWeight: '700', color: '#AAA', letterSpacing: 0.8, fontFamily: 'Lexend-Bold' },
   track:     { height: 4, backgroundColor: '#EEEEEE', borderRadius: 2, overflow: 'hidden' },
   fill:      { height: '100%', backgroundColor: '#2E7D32', borderRadius: 2 },
 });
@@ -74,9 +74,9 @@ const oc = StyleSheet.create({
   left:         { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
   iconBox:      { width: 36, height: 36, borderRadius: 18, backgroundColor: '#F4F4F4', alignItems: 'center', justifyContent: 'center' },
   iconBoxSelected: { backgroundColor: '#DCFCE7' },
-  title:        { fontSize: 15, fontWeight: '600', color: '#111' },
-  titleSelected: { fontWeight: '700', color: '#1A1A2E' },
-  subtitle:     { fontSize: 12, color: '#888', marginTop: 2, lineHeight: 17 },
+  title:        { fontSize: 15, fontWeight: '600', color: '#111', fontFamily: 'Lexend-Bold' },
+  titleSelected: { fontWeight: '700', color: '#1A1A2E', fontFamily: 'Lexend-Bold' },
+  subtitle:     { fontSize: 12, color: '#888', marginTop: 2, lineHeight: 17, fontFamily: 'Lexend-Regular' },
   radio:        { width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: '#DDD', alignItems: 'center', justifyContent: 'center' },
   radioSelected: { borderColor: '#2E7D32' },
   radioDot:     { width: 10, height: 10, borderRadius: 5, backgroundColor: '#2E7D32' },
@@ -393,25 +393,25 @@ const styles = StyleSheet.create({
   backBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#F4F4F4', alignItems: 'center', justifyContent: 'center' },
   content: { paddingHorizontal: 20, paddingBottom: 100 },
 
-  title:      { fontSize: 28, fontWeight: '800', color: '#111', lineHeight: 36, marginBottom: 8 },
-  titleLarge: { fontSize: 26, fontWeight: '800', color: '#111', lineHeight: 34, marginBottom: 8 },
-  subtitle:   { fontSize: 14, lineHeight: 22, color: '#666', marginBottom: 24 },
+  title:      { fontSize: 28, fontWeight: '800', color: '#111', lineHeight: 36, marginBottom: 8, fontFamily: 'Lexend-Black' },
+  titleLarge: { fontSize: 26, fontWeight: '800', color: '#111', lineHeight: 34, marginBottom: 8, fontFamily: 'Lexend-Black' },
+  subtitle:   { fontSize: 14, lineHeight: 22, color: '#666', marginBottom: 24, fontFamily: 'Lexend-Regular' },
   options:    { gap: 0 },
-  sectionLabel: { fontSize: 14, fontWeight: '700', color: '#111', marginBottom: 12 },
+  sectionLabel: { fontSize: 14, fontWeight: '700', color: '#111', marginBottom: 12, fontFamily: 'Lexend-Bold' },
 
   // Days selector
   dayRow:    { flexDirection: 'row', gap: 10 },
   dayBtn:    { width: 48, height: 48, borderRadius: 24, backgroundColor: '#F4F4F4', alignItems: 'center', justifyContent: 'center' },
   dayBtnSelected: { backgroundColor: '#2E7D32' },
-  dayBtnText: { fontSize: 16, fontWeight: '700', color: '#555' },
-  dayBtnTextSelected: { color: '#FFFFFF' },
+  dayBtnText: { fontSize: 16, fontWeight: '700', color: '#555', fontFamily: 'Lexend-Bold' },
+  dayBtnTextSelected: { color: '#FFFFFF', fontFamily: 'Lexend-Bold' },
 
   // Time selector
   timeRow:   { flexDirection: 'row', gap: 10 },
   timeBtn:   { flex: 1, paddingVertical: 14, borderRadius: 14, backgroundColor: '#F4F4F4', alignItems: 'center', gap: 6, borderWidth: 1.5, borderColor: 'transparent' },
   timeBtnSelected: { backgroundColor: '#F0FFF4', borderColor: '#2E7D32' },
-  timeBtnText: { fontSize: 12, fontWeight: '600', color: '#888' },
-  timeBtnTextSelected: { color: '#2E7D32', fontWeight: '700' },
+  timeBtnText: { fontSize: 12, fontWeight: '600', color: '#888', fontFamily: 'Lexend-Bold' },
+  timeBtnTextSelected: { color: '#2E7D32', fontWeight: '700', fontFamily: 'Lexend-Bold' },
 
   // No injury card
   noInjuryCard: {
@@ -420,9 +420,9 @@ const styles = StyleSheet.create({
     borderWidth: 1.5, borderColor: 'transparent', marginBottom: 16,
   },
   noInjuryCardSelected: { backgroundColor: '#F0FFF4', borderColor: '#2E7D32' },
-  noInjuryTitle: { fontSize: 15, fontWeight: '700', color: '#111', marginBottom: 2 },
-  noInjurySub:   { fontSize: 12, color: '#888' },
-  orLabel: { textAlign: 'center', fontSize: 11, fontWeight: '700', color: '#BBB', letterSpacing: 0.5, marginBottom: 14 },
+  noInjuryTitle: { fontSize: 15, fontWeight: '700', color: '#111', marginBottom: 2, fontFamily: 'Lexend-Bold' },
+  noInjurySub:   { fontSize: 12, color: '#888', fontFamily: 'Lexend-Regular' },
+  orLabel: { textAlign: 'center', fontSize: 11, fontWeight: '700', color: '#BBB', letterSpacing: 0.5, marginBottom: 14, fontFamily: 'Lexend-Bold' },
 
   // Injury grid
   injuryGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 16 },
@@ -432,12 +432,12 @@ const styles = StyleSheet.create({
     borderWidth: 1.5, borderColor: 'transparent',
   },
   injuryBtnSelected: { backgroundColor: '#F0FFF4', borderColor: '#2E7D32' },
-  injuryLabel: { fontSize: 13, fontWeight: '600', color: '#555', textAlign: 'center' },
-  injuryNote:  { fontSize: 12, color: '#AAA', textAlign: 'center', lineHeight: 18 },
+  injuryLabel: { fontSize: 13, fontWeight: '600', color: '#555', textAlign: 'center', fontFamily: 'Lexend-Bold' },
+  injuryNote:  { fontSize: 12, color: '#AAA', textAlign: 'center', lineHeight: 18, fontFamily: 'Lexend-Regular' },
 
   // Footer
   footer:      { position: 'absolute', bottom: 0, left: 0, right: 0, padding: 20, backgroundColor: '#FFFFFF', borderTopWidth: 1, borderTopColor: '#F0F0F0' },
   continueBtn: { backgroundColor: '#2E7D32', borderRadius: 40, paddingVertical: 16, alignItems: 'center' },
   continueBtnDisabled: { backgroundColor: '#C8E6C9' },
-  continueBtnText: { color: '#FFFFFF', fontSize: 15, fontWeight: '800', letterSpacing: 0.5 },
+  continueBtnText: { color: '#FFFFFF', fontSize: 15, fontWeight: '800', letterSpacing: 0.5, fontFamily: 'Lexend-Black' },
 });
