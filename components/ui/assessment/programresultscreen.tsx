@@ -3,7 +3,7 @@ import {
   View, Text, StyleSheet, TouchableOpacity,
   ScrollView, ActivityIndicator,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { AssessmentData } from '@/store/assessmentStore';
 import { generateProgram, GeneratedDay } from '@/utils/generateProgram';
@@ -49,6 +49,7 @@ const WORKOUT_ICON: Record<string, string> = {
 export default function ProgramResultScreen({ assessment, onConfirm }: Props) {
   const [program, setProgram] = useState<GeneratedDay[]>([]);
   const [loading, setLoading] = useState(true);
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     // Simulasi loading generate
@@ -84,7 +85,7 @@ export default function ProgramResultScreen({ assessment, onConfirm }: Props) {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.safe}>
+      <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#2E7D32" />
           <Text style={styles.loadingTitle}>Rencana Anda{'\n'}Sedang Dibuat...</Text>
@@ -112,7 +113,7 @@ export default function ProgramResultScreen({ assessment, onConfirm }: Props) {
   }
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
 
         {/* Hero */}
@@ -196,7 +197,7 @@ export default function ProgramResultScreen({ assessment, onConfirm }: Props) {
       </ScrollView>
 
       {/* CTA */}
-      <View style={styles.footer}>
+      <View style={[styles.footer, { paddingBottom: 20 + insets.bottom }]}>
         <TouchableOpacity
           style={styles.startBtn}
           onPress={() => onConfirm(program)}
@@ -251,7 +252,7 @@ const styles = StyleSheet.create({
   featureDesc:  { fontSize: 12, color: '#666', marginTop: 2 },
 
   // Footer
-  footer:   { position: 'absolute', bottom: 0, left: 0, right: 0, padding: 20, backgroundColor: '#FFFFFF', borderTopWidth: 1, borderTopColor: '#F0F0F0' },
+  footer:   { position: 'absolute', bottom: 0, left: 0, right: 0, paddingHorizontal: 20, paddingTop: 20, backgroundColor: '#FFFFFF', borderTopWidth: 1, borderTopColor: '#F0F0F0' },
   startBtn: { backgroundColor: '#2E7D32', borderRadius: 40, paddingVertical: 16, alignItems: 'center' },
   startBtnText: { color: '#FFFFFF', fontSize: 15, fontWeight: '800', letterSpacing: 0.5 },
 });

@@ -6,6 +6,8 @@ import {
   Alert, View, Text, StyleSheet, TouchableOpacity,
   Pressable, Vibration, ScrollView,
 } from 'react-native';
+import { showInterstitialAd } from '@/services/interstitialAdService';
+import { useProStore } from '@/store/proStore';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Circle } from 'react-native-svg';
 import * as Haptics from 'expo-haptics';
@@ -132,6 +134,15 @@ export default function TempoTracker() {
   const phaseIndexRef    = useRef<number>(0);
   const statusRef        = useRef<Status>('idle');
   const autoTriggered    = useRef<boolean>(false);
+
+  const isPro = useProStore((s) => s.isPro);
+
+const handleReturnToDashboard = () => {
+  if (!isPro) {
+    showInterstitialAd();
+  }
+  router.back();
+};
 
   const kalmanRef = useRef({
     lat: { estimate: 0, errorEstimate: 1, errorMeasure: 0.01, gain: 0, initialized: false },
@@ -435,9 +446,9 @@ export default function TempoTracker() {
               </View>
             );
           })}
-          <TouchableOpacity style={styles.doneBtn} onPress={() => router.back()}>
-            <Text style={styles.doneBtnText}>Kembali ke Dashboard →</Text>
-          </TouchableOpacity>
+          <TouchableOpacity style={styles.doneBtn} onPress={handleReturnToDashboard}>
+  <Text style={styles.doneBtnText}>Kembali ke Dashboard →</Text>
+</TouchableOpacity>
         </ScrollView>
       </SafeAreaView>
     );

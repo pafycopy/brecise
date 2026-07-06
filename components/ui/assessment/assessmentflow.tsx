@@ -65,7 +65,7 @@ export default function AssessmentFlow({ visible, onClose }: Props) {
       onRequestClose={handleBack}
     >
       {flowStep === 'assessment' && (
-        <AssessmentScreen onComplete={handleAssessmentComplete} />
+        <AssessmentScreen onComplete={handleAssessmentComplete} onClose={onClose} />
       )}
 
       {flowStep === 'result' && assessmentData && (

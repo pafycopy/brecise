@@ -10,7 +10,6 @@ import WeeklyPlanCard      from '@/components/ui/dashboard/weeklyplancard';
 import StatsRow            from '@/components/ui/dashboard/statsrow';
 import WeeklyActivityLabel from '@/components/ui/dashboard/weeklyactivitylabel';
 import RecentActivityCard  from '@/components/ui/dashboard/recentactivitycard';
-import BannerAdComponent   from '@/components/ui/ads/bannerads';
 import { useDashboardStats } from '@/hooks/usedashboardstats';
 import { useUIEducationStore } from '@/store/uieducationstore';
 import { useProStore } from '@/store/proStore';
@@ -87,9 +86,6 @@ const Dashboard = () => {
           onSeeAll={() => router.push('/(tabs)/training')}
         />
       </ScrollView>
-
-      {/* Banner AdMob — disembunyikan untuk pengguna Pro */}
-      {!isPro && <BannerAdComponent />}
     </View>
   );
 };

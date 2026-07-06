@@ -3,8 +3,12 @@ import {
   View, Text, StyleSheet, TouchableOpacity,
   SafeAreaView, ScrollView, Image,
 } from 'react-native';
+import { showInterstitialAd } from '@/services/interstitialAdService';
+import { useProStore } from '@/store/proStore';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useAudioPlayer } from 'expo-audio';
 import { useWorkoutStore } from '@/store/supabaseWorkoutStore';
 
 type SetStatus = 'pending' | 'done';
@@ -23,10 +27,14 @@ const REST_DURATION = 30;
 
 export default function StrengthTracker() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { uid, dateKey, workoutName, selectedExercises } = useLocalSearchParams<{
     uid: string; dateKey: string; workoutName: string; selectedExercises: string;
   }>();
   const { saveTrackingResult } = useWorkoutStore();
+
+  // ── Audio: suara saat tekan "Mulai" ─────────────────────────────────────
+  const countdownPlayer = useAudioPlayer(require('@/assets/sounds/countdown.mp3'));
 
   // ── Parse exercises ──────────────────────────────────────────────────────
   const exercises: ExerciseProgress[] = (() => {
@@ -64,6 +72,7 @@ export default function StrengthTracker() {
   const restTimerRef = useRef<any>(null);
   const setTimerRef = useRef<any>(null);
   const countdownTimerRef = useRef<any>(null); // Ref baru untuk timer hitung mundur
+
 
   // Refs untuk hindari stale closure di interval
   const exerciseIndexRef = useRef(0);
@@ -211,6 +220,12 @@ export default function StrengthTracker() {
   }, [screen]);
 
   // Cleanup unmount
+  // NOTE: useAudioPlayer dari expo-audio sudah otomatis me-release player-nya
+  // sendiri saat komponen unmount. Memanggil countdownPlayer.remove() secara
+  // manual di sini menyebabkan error:
+  // "Cannot use shared object that was already released" karena player
+  // sudah di-release lebih dulu oleh hook-nya sebelum baris ini jalan.
+  // Jadi baris itu dihapus — cukup bersihkan interval saja.
   useEffect(() => {
     return () => {
       clearInterval(totalTimerRef.current);
@@ -239,6 +254,12 @@ export default function StrengthTracker() {
   const doneSets = progress.reduce((acc, e) => acc + e.sets.filter((s) => s.status === 'done').length, 0);
 
   const startSetCountdown = () => {
+    // Putar suara setiap kali tombol "Mulai" / "Start Set" ditekan
+    try {
+      countdownPlayer.seekTo(0);
+      countdownPlayer.play();
+    } catch (_) {}
+
     setCountdown(3); // Mulai hitung mundur 3 detik
     setScreen('exercise'); // Pastikan kita di layar exercise
   };
@@ -298,15 +319,20 @@ export default function StrengthTracker() {
     setRestCountdown((prev) => prev + 15);
   };
 
-  const handleFinish = async () => {
-    clearInterval(totalTimerRef.current);
-    clearInterval(restTimerRef.current);
-    clearInterval(setTimerRef.current);
-    await saveTrackingResult(dateKey, uid, {
-      actualDistance: 0, actualDuration: totalTime, actualPace: '--', completedAt: Date.now(),
-    });
-    router.back();
-  };
+  const isPro = useProStore((s) => s.isPro);
+
+const handleFinish = async () => {
+  clearInterval(totalTimerRef.current);
+  clearInterval(restTimerRef.current);
+  clearInterval(setTimerRef.current);
+  await saveTrackingResult(dateKey, uid, {
+    actualDistance: 0, actualDuration: totalTime, actualPace: '--', completedAt: Date.now(),
+  });
+  if (!isPro) {
+    showInterstitialAd();
+  }
+  router.back();
+};
 
   const getUpNext = () => {
     const isLastSet = currentSetIndex === (currentExercise?.sets.length ?? 0) - 1;

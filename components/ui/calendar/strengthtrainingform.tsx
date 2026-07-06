@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity,
-  StyleSheet, ScrollView, SafeAreaView, StatusBar, Image,
+  StyleSheet, ScrollView, StatusBar, Image,
 } from 'react-native';
+import { useSafeAreaInsets, SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import Svg, { Path, G, ClipPath, Defs, Rect } from 'react-native-svg';
 import {
@@ -104,11 +105,12 @@ type PreviewProps = {
 };
 
 function WorkoutPreview({ badge, programTitle, durationMins, totalSets, exercises, quote, onBack, onStart }: PreviewProps) {
+  const insets = useSafeAreaInsets();
   const intensity = getIntensity(totalSets);
   return (
-    <SafeAreaView style={ps.safe}>
+    <SafeAreaView style={ps.safe} edges={[]}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
-      <View style={ps.header}>
+      <View style={[ps.header, { paddingTop: 14 + insets.top }]}>
         <TouchableOpacity onPress={onBack} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
           <Ionicons name="arrow-back" size={22} color="#1A1A2E" />
         </TouchableOpacity>
@@ -161,7 +163,7 @@ function WorkoutPreview({ badge, programTitle, durationMins, totalSets, exercise
         </View>
         {!!quote && <Text style={ps.quote}>"{quote}"</Text>}
       </ScrollView>
-      <View style={ps.footer}>
+      <View style={[ps.footer, { paddingBottom: 20 + insets.bottom }]}>
         <TouchableOpacity style={ps.startBtn} onPress={onStart} activeOpacity={0.88}>
           <Text style={ps.startBtnText}>Simpan Latihan</Text>
         </TouchableOpacity>
@@ -172,6 +174,8 @@ function WorkoutPreview({ badge, programTitle, durationMins, totalSets, exercise
 
 // ─── Form Screen ──────────────────────────────────────────────────────────────
 export default function StrengthTrainingForm({ initialValues, onBack, onSave }: Props) {
+  const insets = useSafeAreaInsets();
+
   const [activeCategory, setActiveCategory] = useState<ExerciseCategory>(
     (initialValues?.trainingCategory as ExerciseCategory) ?? 'Strength'
   );
@@ -185,7 +189,6 @@ export default function StrengthTrainingForm({ initialValues, onBack, onSave }: 
       })
       .filter(Boolean) as SelectedExercise[];
   });
-  const [notes, setNotes] = useState(initialValues?.notes ?? '');
   const [error, setError] = useState('');
   const [showPreview, setShowPreview] = useState(false);
   const [pendingValues, setPendingValues] = useState<WorkoutFormValues | null>(null);
@@ -248,10 +251,10 @@ export default function StrengthTrainingForm({ initialValues, onBack, onSave }: 
     const values: WorkoutFormValues = {
       workoutType: 'Strength Training',
       workoutName: `${activeCategory} Session`,
-      distance: '', pace: '', sets: String(totalSets), reps: '',
+      distance: '', pace: '', paceMin: 0, paceMax: 0, sets: String(totalSets), reps: '',
       restTime: '60', weight: '',
       duration: { hour: 0, min: 0, sec: 0 },
-      notes, trainingCategory: activeCategory,
+      trainingCategory: activeCategory,
       selectedExercises: selectedExercises.map((e) => ({
         id: e.exercise.id,
         name: e.exercise.name,
@@ -299,8 +302,8 @@ export default function StrengthTrainingForm({ initialValues, onBack, onSave }: 
   const catConfig = CATEGORY_CONFIG[activeCategory];
 
   return (
-    <SafeAreaView style={fs.safeArea}>
-      <View style={fs.header}>
+    <SafeAreaView style={fs.safeArea} edges={[]}>
+      <View style={[fs.header, { paddingTop: 14 + insets.top }]}>
         <TouchableOpacity onPress={onBack} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
           <Ionicons name="arrow-back" size={22} color="#1A1A2E" />
         </TouchableOpacity>
@@ -423,11 +426,6 @@ export default function StrengthTrainingForm({ initialValues, onBack, onSave }: 
 
         {error ? <Text style={fs.errorText}>{error}</Text> : null}
 
-        <View style={fs.fieldGroup}>
-          <Text style={fs.fieldLabel}>NOTES</Text>
-          <TextInput style={fs.textArea} placeholder="Otot mana yang dilatih? Tingkat kelelahan?" placeholderTextColor="#BBB" multiline numberOfLines={3} value={notes} onChangeText={setNotes} />
-        </View>
-
         {selectedExercises.length > 0 && (
           <View style={fs.summaryBox}>
             <Text style={fs.summaryTitle}>RINGKASAN</Text>
@@ -446,7 +444,7 @@ export default function StrengthTrainingForm({ initialValues, onBack, onSave }: 
         )}
       </ScrollView>
 
-      <View style={fs.footer}>
+      <View style={[fs.footer, { paddingBottom: 20 + insets.bottom }]}>
         <TouchableOpacity style={fs.saveButton} onPress={handlePreview} activeOpacity={0.85}>
           <Ionicons name="eye-outline" size={18} color="#fff" />
           <Text style={fs.saveButtonText}>{isEditing ? 'Lihat & Simpan Perubahan' : 'Lihat Preview'}</Text>
@@ -459,7 +457,7 @@ export default function StrengthTrainingForm({ initialValues, onBack, onSave }: 
 // ─── Styles Preview ───────────────────────────────────────────────────────────
 const ps = StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#F2F3F5' },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 14, backgroundColor: '#FFFFFF', borderBottomWidth: 1, borderBottomColor: '#F0F0F0' },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingBottom: 14, backgroundColor: '#FFFFFF', borderBottomWidth: 1, borderBottomColor: '#F0F0F0' },
   headerTitle: { fontSize: 16, fontWeight: '700', color: '#1A1A2E' },
   scroll: { padding: 16, gap: 14, paddingBottom: 32 },
   heroCard: { backgroundColor: '#1A1A2E', borderRadius: 20, padding: 20, paddingBottom: 24, gap: 10 },
@@ -481,7 +479,7 @@ const ps = StyleSheet.create({
   typeBadgeDuration: { backgroundColor: '#EEF4FF' },
   typeBadgeText: { fontSize: 11, fontWeight: '700', color: '#FF6B35' },
   quote: { textAlign: 'center', fontSize: 13, color: '#AAA', fontStyle: 'italic', paddingHorizontal: 16, paddingVertical: 8 },
-  footer: { padding: 20, paddingBottom: 32, backgroundColor: '#F2F3F5' },
+  footer: { padding: 20, backgroundColor: '#F2F3F5' },
   startBtn: { backgroundColor: '#4CD964', borderRadius: 50, paddingVertical: 17, alignItems: 'center', justifyContent: 'center' },
   startBtnText: { fontSize: 16, fontWeight: '800', color: '#1A1A2E', letterSpacing: 0.3 },
 });
@@ -489,7 +487,7 @@ const ps = StyleSheet.create({
 // ─── Styles Form ──────────────────────────────────────────────────────────────
 const fs = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#FFFFFF' },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: '#F0F0F0' },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingBottom: 14, borderBottomWidth: 1, borderBottomColor: '#F0F0F0' },
   headerTitle: { fontSize: 16, fontWeight: '700', color: '#1A1A2E', letterSpacing: 1 },
   form: { padding: 16, gap: 16, paddingBottom: 32 },
   sectionLabel: { fontSize: 11, fontWeight: '700', color: '#999', letterSpacing: 0.8 },
@@ -536,7 +534,7 @@ const fs = StyleSheet.create({
   summaryDivider: { width: 1, height: 40, backgroundColor: '#FFFFFF22' },
   summaryLabel: { fontSize: 11, fontWeight: '600', color: '#FFFFFF88', letterSpacing: 0.5 },
   summaryValue: { fontSize: 28, fontWeight: '800', color: '#FFFFFF', marginTop: 4 },
-  footer: { padding: 20, paddingBottom: 28 },
+  footer: { padding: 20 },
   saveButton: { backgroundColor: '#1A1A2E', borderRadius: 50, paddingVertical: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
   saveButtonText: { color: '#FFFFFF', fontSize: 16, fontWeight: '700' },
 });

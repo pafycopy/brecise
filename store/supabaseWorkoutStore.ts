@@ -40,12 +40,17 @@ type SupabaseWorkoutStore = {
   getWorkoutsByDate: (dateKey: string) => SavedWorkout[];
   getWorkoutDates: () => string[];
   clearGeneratedWorkouts: () => Promise<void>;
+  resetStore: () => void; // ✅ BARU
+};
+
+const initialState = {
+  workoutsByDate: {} as Record<string, SavedWorkout[]>,
+  selectedDate: new Date(),
+  isLoading: false,
 };
 
 export const useWorkoutStore = create<SupabaseWorkoutStore>((set, get) => ({
-  workoutsByDate: {},
-  selectedDate: new Date(),
-  isLoading: false,
+  ...initialState,
 
   setSelectedDate: (date) => set({ selectedDate: date }),
 
@@ -163,8 +168,6 @@ export const useWorkoutStore = create<SupabaseWorkoutStore>((set, get) => ({
         const workout = get().workoutsByDate[dateKey]?.find((w) => w.uid === uid);
         const workoutType = workout?.workoutType ?? '';
 
-        // Semua jenis lari → completed_runs
-        // Strength Training → completed_strength
         const typeIncrements: Record<string, object> = {
           'Running':           { completed_runs: (stats.completed_runs ?? 0) + 1 },
           'Easy Run':          { completed_runs: (stats.completed_runs ?? 0) + 1 },
@@ -229,4 +232,7 @@ export const useWorkoutStore = create<SupabaseWorkoutStore>((set, get) => ({
       return { workoutsByDate: next };
     });
   },
+
+  // ✅ BARU — reset semua state ke kondisi awal, dipanggil pas ganti/logout akun
+  resetStore: () => set({ ...initialState, workoutsByDate: {}, selectedDate: new Date() }),
 }));

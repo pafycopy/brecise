@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity,
-  StyleSheet, ScrollView, SafeAreaView,
+  StyleSheet, ScrollView,
 } from 'react-native';
+import { useSafeAreaInsets, SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import {
   getFormConfig, WorkoutField,
@@ -46,13 +47,18 @@ export type WorkoutFormValues = {
     // StrengthTracker.tsx (GIF & timer untuk exercise bertipe 'duration').
     // Optional, supaya tidak breaking untuk data lama yang belum punya field ini.
     inputType?: 'reps' | 'duration';
-    gifUrl?: string;
+    // ✅ FIX: terima null juga karena StrengthTrainingForm mengirim
+    // `exercise.gifUrl ?? null` saat exercise tidak punya GIF.
+    gifUrl?: string | null;
     sets: Array<{
       set: number;
       reps: string;
       // ✅ FIX: ditambahkan agar exercise bertipe 'duration' (misal Plank,
       // Single Leg Balance) bisa membawa durasi targetnya, bukan cuma reps.
       duration?: string;
+      // ✅ FIX: ditambahkan karena StrengthTrainingForm menyertakan beban (kg)
+      // per set untuk exercise yang butuh tracking beban.
+      kg?: string;
     }>;
   }>;
 };
@@ -145,6 +151,8 @@ const FORM_REGISTRY: Partial<Record<string, React.ComponentType<any>>> = {
 };
 
 export default function WorkoutFormScreen({ workout, initialValues, onBack, onSave }: Props) {
+  const insets = useSafeAreaInsets();
+
   const SpecialForm = FORM_REGISTRY[workout.label];
   if (SpecialForm) {
     return <SpecialForm initialValues={initialValues} onBack={onBack} onSave={onSave} />;
@@ -219,8 +227,8 @@ export default function WorkoutFormScreen({ workout, initialValues, onBack, onSa
   const paceRangeLimits = PACE_RANGE_LIMITS[workout.label] ?? { min: 5.0, max: 13.0 };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.header}>
+    <SafeAreaView style={styles.safeArea} edges={[]}>
+      <View style={[styles.header, { paddingTop: 14 + insets.top }]}>
         <TouchableOpacity onPress={onBack} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
           <Ionicons name="arrow-back" size={22} color="#1A1A2E" />
         </TouchableOpacity>
@@ -431,7 +439,7 @@ export default function WorkoutFormScreen({ workout, initialValues, onBack, onSa
 
       </ScrollView>
 
-      <View style={styles.footer}>
+      <View style={[styles.footer, { paddingBottom: 20 + insets.bottom }]}>
         <TouchableOpacity style={styles.saveButton} onPress={handleSubmit} activeOpacity={0.85}>
           <Ionicons name="save-outline" size={18} color="#fff" />
           <Text style={styles.saveButtonText}>
@@ -447,7 +455,7 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#FFFFFF' },
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 20, paddingVertical: 14,
+    paddingHorizontal: 20, paddingBottom: 14,
     borderBottomWidth: 1, borderBottomColor: '#F0F0F0',
   },
   headerTitle: { fontSize: 16, fontWeight: '700', color: '#1A1A2E', letterSpacing: 1 },
@@ -490,7 +498,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F4F4F4', borderRadius: 12, padding: 14,
     fontSize: 14, color: '#1A1A2E', minHeight: 100, textAlignVertical: 'top',
   },
-  footer: { padding: 20, paddingBottom: 28 },
+  footer: { padding: 20 },
   saveButton: {
     backgroundColor: '#2E7D32', borderRadius: 50, paddingVertical: 16,
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,

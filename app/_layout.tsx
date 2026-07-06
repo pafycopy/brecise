@@ -11,9 +11,26 @@ import { useAssessmentStore } from '@/store/assessmentStore';
 import { setupPurchaseListeners, initIAP, closeIAP, checkProStatus } from '@/lib/proService';
 import { useNotificationStore } from '@/store/notificationStore';
 import { useWorkoutStore } from '@/store/supabaseWorkoutStore';
+import { useProStore } from '@/store/proStore';
 import { scheduleWeeklyReport } from '@/lib/notifications';
+import { configureAds } from '@/lib/adsconfig';
+import { initInterstitialAd } from '@/services/interstitialAdService';
 
 SplashScreen.preventAutoHideAsync();
+
+// ── Helper: reset semua Zustand store yang nyimpen data per-akun ────────────
+const resetAllUserStores = () => {
+  useWorkoutStore.getState().resetStore();
+  useProStore.getState().resetStore();
+  useAssessmentStore.getState().resetStore();
+};
+
+// ── Helper: load data akun (dipanggil tiap ada session baru / berbeda) ──────
+const loadUserData = () => {
+  checkProStatus();
+  useWorkoutStore.getState().fetchWorkouts();
+  useAssessmentStore.getState().syncFromSupabase();
+};
 
 export default function RootLayout() {
   const router = useRouter();
@@ -50,17 +67,24 @@ export default function RootLayout() {
     };
   }, []);
 
+  // ✨ ADS: init AdMob SDK + preload interstitial, sekali saat app start
+  useEffect(() => {
+    configureAds().then(() => initInterstitialAd());
+  }, []);
+
   // ── Session ───────────────────────────────────────────────────────────────
   useEffect(() => {
+    let lastUserId: string | null = null;
+
     const initSession = async () => {
       await clearInvalidSession();
       const { data } = await supabase.auth.getSession();
       setSession(data.session ?? null);
       setIsAuthLoading(false);
 
-      // Cek status Pro setelah session siap
       if (data.session) {
-        checkProStatus();
+        lastUserId = data.session.user.id;
+        loadUserData();
       }
     };
 
@@ -77,13 +101,24 @@ export default function RootLayout() {
       }
 
       if (_event === 'SIGNED_OUT') {
+        // ✅ Reset semua store biar data akun lama ga nyangkut
+        resetAllUserStores();
+        lastUserId = null;
         setSession(null);
         return;
       }
 
-      // Cek Pro setiap kali session berubah (login baru)
       if (session) {
-        checkProStatus();
+        const newUserId = session.user.id;
+
+        // ✅ Reset store kalau user berubah (ganti akun tanpa logout eksplisit,
+        // misalnya lewat OAuth langsung ganti akun)
+        if (lastUserId && lastUserId !== newUserId) {
+          resetAllUserStores();
+        }
+        lastUserId = newUserId;
+
+        loadUserData();
       }
 
       setSession(session ?? null);
@@ -153,12 +188,6 @@ export default function RootLayout() {
   }, [session, isCompleted, isResettingPassword]);
 
   // ── Refresh Laporan Mingguan ─────────────────────────────────────────────
-  // Karena notifikasi mingguan dijadwalkan secara lokal (expo-notifications),
-  // isinya tidak otomatis ter-update sendiri tiap minggu. Untuk meminimalkan
-  // data yang basi, kita hitung ulang & re-schedule setiap kali user
-  // membuka app (saat login sudah siap) dan setiap kali app kembali ke
-  // foreground. Ini bukan solusi real-time, tapi memastikan data selalu
-  // sefresh kunjungan terakhir user ke app.
   useEffect(() => {
     if (!session || isAuthLoading) return;
 
@@ -170,7 +199,7 @@ export default function RootLayout() {
 
       const now = new Date();
       const sevenDaysAgo = new Date(now);
-      sevenDaysAgo.setDate(now.getDate() - 6); // termasuk hari ini = 7 hari
+      sevenDaysAgo.setDate(now.getDate() - 6);
       sevenDaysAgo.setHours(0, 0, 0, 0);
 
       const weeklyWorkouts = Object.entries(workoutsByDate)
@@ -190,10 +219,8 @@ export default function RootLayout() {
       await scheduleWeeklyReport(totalSessions, Math.round(totalDistance * 10) / 10, 0);
     };
 
-    // Refresh sekali saat app baru dibuka & session siap
     refreshWeeklyReportIfNeeded();
 
-    // Refresh lagi setiap kali app kembali ke foreground (misal dari background)
     const handleAppStateChange = (nextState: AppStateStatus) => {
       if (nextState === 'active') {
         refreshWeeklyReportIfNeeded();
@@ -224,6 +251,7 @@ export default function RootLayout() {
           <Stack.Screen name="privacy" />
           <Stack.Screen name="pro" />
         </Stack>
+
         <AssessmentFlow
           visible={showAssessment}
           onClose={handleAssessmentClose}

@@ -15,6 +15,8 @@ import {
   Vibration,
   ScrollView,
 } from 'react-native';
+import { showInterstitialAd } from '@/services/interstitialAdService';
+import { useProStore } from '@/store/proStore';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAudioPlayer } from 'expo-audio';
 import * as Haptics from 'expo-haptics';
@@ -74,6 +76,15 @@ export default function RunningTracker() {
   const totalDistRef      = useRef<number>(0);
   const timeRef           = useRef<number>(0);
   const movingTimeRef     = useRef<number>(0);
+
+  const isPro = useProStore((s) => s.isPro);
+
+const handleReturnToDashboard = () => {
+  if (!isPro) {
+    showInterstitialAd();
+  }
+  router.back();
+};
 
   useEffect(() => { totalDistRef.current  = totalDist;  }, [totalDist]);
   useEffect(() => { timeRef.current       = time;       }, [time]);
@@ -336,7 +347,7 @@ export default function RunningTracker() {
             );
           })()}
 
-          <TouchableOpacity style={st.doneBtn} onPress={() => router.back()} activeOpacity={0.88}>
+          <TouchableOpacity style={st.doneBtn} onPress={handleReturnToDashboard} activeOpacity={0.88}>
             <Text style={st.doneBtnText}>Kembali ke Dashboard</Text>
             <Ionicons name="arrow-forward" size={18} color="#111" />
           </TouchableOpacity>

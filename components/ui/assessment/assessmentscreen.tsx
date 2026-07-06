@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity,
-  ScrollView, SafeAreaView, Animated,
+  ScrollView, Animated,
 } from 'react-native';
+import { useSafeAreaInsets, SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import {
   AssessmentData, RunningLevel, RunningGoal,
@@ -11,6 +12,7 @@ import {
 
 type Props = {
   onComplete: (data: AssessmentData) => void;
+  onClose?: () => void;
 };
 
 const TOTAL_STEPS = 6;
@@ -83,7 +85,9 @@ const oc = StyleSheet.create({
 });
 
 // ─── Main component ───────────────────────────────────────────────────────
-export default function AssessmentScreen({ onComplete }: Props) {
+export default function AssessmentScreen({ onComplete, onClose }: Props) {
+  const insets = useSafeAreaInsets();
+
   const [step, setStep]               = useState(1);
   const [level, setLevel]             = useState<RunningLevel | null>(null);
   const [goal, setGoal]               = useState<RunningGoal | null>(null);
@@ -120,15 +124,24 @@ export default function AssessmentScreen({ onComplete }: Props) {
   };
 
   const handleBack = () => {
-    if (step > 1) setStep(step - 1);
+    if (step > 1) {
+      setStep(step - 1);
+    } else {
+      onClose?.();
+    }
   };
 
   return (
-    <SafeAreaView style={styles.safe}>
-      <View style={styles.header}>
-        {step > 1 ? (
-          <TouchableOpacity onPress={handleBack} style={styles.backBtn}>
-            <Ionicons name="arrow-back" size={22} color="#111" />
+    <SafeAreaView style={styles.safe} edges={[]}>
+      <View style={[styles.header, { paddingTop: 12 + insets.top }]}>
+        {step > 1 || onClose ? (
+          <TouchableOpacity
+            onPress={handleBack}
+            style={styles.backBtn}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            activeOpacity={0.7}
+          >
+            <Ionicons name={step > 1 ? 'arrow-back' : 'close'} size={22} color="#111" />
           </TouchableOpacity>
         ) : (
           <View style={styles.backBtn} />
@@ -371,7 +384,7 @@ export default function AssessmentScreen({ onComplete }: Props) {
       </ScrollView>
 
       {/* Continue button */}
-      <View style={styles.footer}>
+      <View style={[styles.footer, { paddingBottom: 20 + insets.bottom }]}>
         <TouchableOpacity
           style={[styles.continueBtn, !canContinue() && styles.continueBtnDisabled]}
           onPress={handleContinue}
@@ -389,7 +402,7 @@ export default function AssessmentScreen({ onComplete }: Props) {
 
 const styles = StyleSheet.create({
   safe:    { flex: 1, backgroundColor: '#FFFFFF' },
-  header:  { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 4 },
+  header:  { paddingHorizontal: 20, paddingBottom: 4, zIndex: 10, position: 'relative' },
   backBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#F4F4F4', alignItems: 'center', justifyContent: 'center' },
   content: { paddingHorizontal: 20, paddingBottom: 100 },
 

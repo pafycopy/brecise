@@ -7,6 +7,8 @@ import {
   View, Text, StyleSheet, TouchableOpacity,
   Pressable, Vibration, ScrollView, Alert,
 } from 'react-native';
+import { showInterstitialAd } from '@/services/interstitialAdService';
+import { useProStore } from '@/store/proStore';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Circle } from 'react-native-svg';
 import * as Haptics from 'expo-haptics';
@@ -128,6 +130,15 @@ export default function IntervalTracker() {
   const repMovingTimeRef = useRef<number>(0);
   const repTimeRef       = useRef<number>(0);
   const currentRepRef    = useRef<number>(1);
+
+  const isPro = useProStore((s) => s.isPro);
+
+const handleReturnToDashboard = () => {
+  if (!isPro) {
+    showInterstitialAd();
+  }
+  router.back();
+};
 
   const kalmanRef = useRef({
     lat: { estimate: 0, errorEstimate: 1, errorMeasure: 0.01, gain: 0, initialized: false },
@@ -434,9 +445,9 @@ export default function IntervalTracker() {
               </View>
             </View>
           ))}
-          <TouchableOpacity style={styles.doneBtn} onPress={() => router.back()}>
-            <Text style={styles.doneBtnText}>Kembali ke Dashboard →</Text>
-          </TouchableOpacity>
+          <TouchableOpacity style={styles.doneBtn} onPress={handleReturnToDashboard}>
+  <Text style={styles.doneBtnText}>Kembali ke Dashboard →</Text>
+</TouchableOpacity>
         </ScrollView>
       </SafeAreaView>
     );

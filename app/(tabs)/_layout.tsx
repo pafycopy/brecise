@@ -1,17 +1,17 @@
 import React, { useEffect } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
+import { BottomTabBar, BottomTabBarProps } from '@react-navigation/bottom-tabs';
+import { View } from 'react-native';
 
 import { useWorkoutStore } from '@/store/supabaseWorkoutStore';
+import { useProStore } from '@/store/proStore';
+import BannerAdComponent from '@/components/ui/ads/bannerads';
 
 const Tabslayout = () => {
+  const fetchWorkouts = useWorkoutStore((s) => s.fetchWorkouts);
+  const isPro = useProStore((s) => s.isPro);
 
-  // ✅ pindah ke dalam component
-  const fetchWorkouts = useWorkoutStore(
-    (s) => s.fetchWorkouts
-  );
-
-  // ✅ aman
   useEffect(() => {
     fetchWorkouts();
   }, []);
@@ -20,32 +20,30 @@ const Tabslayout = () => {
     <Tabs
       screenOptions={{
         headerShown: false,
-
         tabBarActiveTintColor: '#006E2F',
         tabBarInactiveTintColor: '#191C1E',
-
         tabBarStyle: {
           height: 70,
           paddingBottom: 8,
           paddingTop: 8,
         },
-
         tabBarLabelStyle: {
           fontSize: 12,
         },
       }}
+      tabBar={(props: BottomTabBarProps) => (
+        <View>
+          {!isPro && <BannerAdComponent />}
+          <BottomTabBar {...props} />
+        </View>
+      )}
     >
-
       <Tabs.Screen
         name="dashboard"
         options={{
           title: 'dashboard',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons
-              name="home"
-              color={color}
-              size={size}
-            />
+            <Ionicons name="home" color={color} size={size} />
           ),
         }}
       />
@@ -55,11 +53,7 @@ const Tabslayout = () => {
         options={{
           title: 'education',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons
-              name="library"
-              color={color}
-              size={size}
-            />
+            <Ionicons name="library" color={color} size={size} />
           ),
         }}
       />
@@ -69,11 +63,7 @@ const Tabslayout = () => {
         options={{
           title: 'training',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons
-              name="barbell"
-              color={color}
-              size={size}
-            />
+            <Ionicons name="barbell" color={color} size={size} />
           ),
         }}
       />
@@ -83,15 +73,10 @@ const Tabslayout = () => {
         options={{
           title: 'profile',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons
-              name="person"
-              color={color}
-              size={size}
-            />
+            <Ionicons name="person" color={color} size={size} />
           ),
         }}
       />
-
     </Tabs>
   );
 };
