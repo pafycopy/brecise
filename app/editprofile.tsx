@@ -3,7 +3,7 @@ import {
   StyleSheet, ScrollView, Alert, ActivityIndicator,
   KeyboardAvoidingView, Platform, Modal,
 } from 'react-native';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
@@ -14,7 +14,7 @@ const GENDER_OPTIONS = ['Pria', 'Wanita', 'Memilih tidak mengatakan'];
 
 const EditProfileScreen = () => {
   const {
-    name, location, avatarUri, birthDate, gender, weightKg,
+    name, location, avatarUri, birthDate, gender, weightKg, userId,
     setName, setLocation, setAvatarUri, setBirthDate, setGender, setWeightKg,
     saveToSupabase,
   } = useUserStore();
@@ -34,6 +34,24 @@ const EditProfileScreen = () => {
   const [localBirthDate, setLocalBirthDate] = useState<Date | null>(
     birthDate ? new Date(birthDate) : null
   );
+
+  // ✅ FIX: state lokal di atas cuma di-seed SEKALI dari store pas komponen
+  // pertama mount (React useState initial value hanya dipakai di render
+  // pertama). Kalau userId di store berubah (ganti akun), field2 ini gak
+  // pernah ke-refresh, jadi form ini masih nampilin data akun LAMA meskipun
+  // store globalnya sudah benar (itu yang bikin "nama dan isi lainnya ga
+  // reset" walau ProfileHeader di dashboard sudah benar).
+  // Solusinya: re-seed semua state lokal setiap kali userId berubah.
+  useEffect(() => {
+    setLocalName(name);
+    setCity(location.split(',')[0]?.trim() ?? '');
+    setCountry(location.split(',')[1]?.trim() ?? '');
+    setLocalAvatar(avatarUri);
+    setLocalGender(gender ?? '');
+    setLocalWeight(weightKg ?? '');
+    setLocalBirthDate(birthDate ? new Date(birthDate) : null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId]);
 
   const formatDisplayDate = (date: Date | null): string => {
     if (!date) return '';

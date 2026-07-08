@@ -70,8 +70,8 @@ function FormWrapper({ children }: { children: React.ReactNode }) {
 
 export default function AuthScreen() {
   const router = useRouter();
-  const { setName } = useUserStore();
-  const { syncFromSupabase } = useAssessmentStore();
+  const { setName, syncFromSupabase: syncUserFromSupabase } = useUserStore();
+  const { syncFromSupabase: syncAssessmentFromSupabase } = useAssessmentStore();
 
   const [screen, setScreen] = useState<Screen>('splash');
   const [fullName, setFullName] = useState('');
@@ -129,8 +129,22 @@ export default function AuthScreen() {
     if (hasError) return;
     try {
       setLoading(true);
-      const { error } = await supabase.auth.signUp({ email, password });
+      const { data, error } = await supabase.auth.signUp({ email, password });
       if (error) throw error;
+
+      // PENTING: Supabase TIDAK mengembalikan error kalau email sudah terdaftar
+      // (ini disengaja untuk mencegah "email enumeration attack"). Satu-satunya
+      // penanda adalah data.user.identities menjadi array kosong.
+      const isAlreadyRegistered = !!data.user && (data.user.identities?.length ?? 0) === 0;
+      if (isAlreadyRegistered) {
+        setEmailError('Email ini sudah terdaftar');
+        Alert.alert(
+          'Email sudah terdaftar',
+          'Email ini sudah digunakan. Silakan masuk, atau gunakan alamat email lain.'
+        );
+        return;
+      }
+
       setName(fullName.trim());
       Alert.alert('Berhasil', 'Cek email kamu untuk verifikasi akun');
     } catch (err: any) {
@@ -157,8 +171,8 @@ export default function AuthScreen() {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
 
-      // Hydrate assessment + status Pro dari Supabase setelah login
-      await Promise.all([syncFromSupabase(), checkProStatus()]);
+      // Hydrate profil + assessment + status Pro dari Supabase setelah login
+      await Promise.all([syncUserFromSupabase(), syncAssessmentFromSupabase(), checkProStatus()]);
 
       router.replace('/(tabs)/dashboard');
     } catch (err: any) {
@@ -206,8 +220,8 @@ export default function AuthScreen() {
 
       const { data: sd } = await supabase.auth.getSession();
       if (sd?.session) {
-        // Hydrate assessment + status Pro dari Supabase setelah Google login
-        await Promise.all([syncFromSupabase(), checkProStatus()]);
+        // Hydrate profil + assessment + status Pro dari Supabase setelah Google login
+        await Promise.all([syncUserFromSupabase(), syncAssessmentFromSupabase(), checkProStatus()]);
 
         router.replace('/(tabs)/dashboard');
         return;
@@ -780,4 +794,4 @@ const styles = StyleSheet.create({
   switchRow: { alignItems: 'center', marginBottom: 12 },
   switchText: { fontSize: 13, color: '#888', textAlign: 'center', fontFamily: 'Lexend-Regular' },
   switchBold: { fontWeight: '800', color: '#111', fontFamily: 'Lexend-Bold' },
-}); 
+});

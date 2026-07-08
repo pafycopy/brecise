@@ -38,10 +38,15 @@ const Tabslayout = () => {
         </View>
       )}
     >
+      {/* ✅ FIX: "name" di Tabs.Screen harus sama persis dengan nama file
+          route di folder (tabs), bukan judul bebas. File aslinya bernama
+          dashboard.tsx, education.tsx, training.tsx, profile.tsx — sebelumnya
+          ditulis "HOME"/"EDU"/"PLAN" yang tidak match nama file manapun,
+          makanya Expo Router warning "No route named ... exists". */}
       <Tabs.Screen
         name="dashboard"
         options={{
-          title: 'dashboard',
+          title: 'Home',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="home" color={color} size={size} />
           ),
@@ -51,7 +56,7 @@ const Tabslayout = () => {
       <Tabs.Screen
         name="education"
         options={{
-          title: 'education',
+          title: 'Edu',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="library" color={color} size={size} />
           ),
@@ -61,7 +66,7 @@ const Tabslayout = () => {
       <Tabs.Screen
         name="training"
         options={{
-          title: 'training',
+          title: 'Plan',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="barbell" color={color} size={size} />
           ),
@@ -71,7 +76,7 @@ const Tabslayout = () => {
       <Tabs.Screen
         name="profile"
         options={{
-          title: 'profile',
+          title: 'Profile',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="person" color={color} size={size} />
           ),

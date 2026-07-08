@@ -53,7 +53,8 @@ const BannerAdComponent = () => {
 
   if (isExpoGo || !BannerAd || hidden) return null;
 
-  const adUnitId = __DEV__ ? TestIds.ADAPTIVE_BANNER : PROD_AD_UNIT_ID;
+  const isTestBuild = process.env.EXPO_PUBLIC_ADS_TEST_MODE === 'true';
+const adUnitId = (__DEV__ || isTestBuild) ? TestIds.ADAPTIVE_BANNER : PROD_AD_UNIT_ID;
 
   return (
     <View style={{ alignItems: 'center' }}>

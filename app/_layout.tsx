@@ -8,6 +8,7 @@ import { View, ActivityIndicator, AppState, AppStateStatus } from 'react-native'
 import { supabase, clearInvalidSession } from '@/lib/supabase';
 import AssessmentFlow from '@/components/ui/assessment/assessmentflow';
 import { useAssessmentStore } from '@/store/assessmentStore';
+import { useUserStore } from '@/store/userStore';
 import { setupPurchaseListeners, initIAP, closeIAP, checkProStatus } from '@/lib/proService';
 import { useNotificationStore } from '@/store/notificationStore';
 import { useWorkoutStore } from '@/store/supabaseWorkoutStore';
@@ -23,6 +24,9 @@ const resetAllUserStores = () => {
   useWorkoutStore.getState().resetStore();
   useProStore.getState().resetStore();
   useAssessmentStore.getState().resetStore();
+  // ✅ FIX: userStore (nama, lokasi, avatar, dll) sebelumnya tidak pernah
+  // di-reset di sini — itu penyebab nama & data profil "nyangkut" ke akun baru.
+  useUserStore.getState().resetStore();
 };
 
 // ── Helper: load data akun (dipanggil tiap ada session baru / berbeda) ──────
@@ -30,6 +34,10 @@ const loadUserData = () => {
   checkProStatus();
   useWorkoutStore.getState().fetchWorkouts();
   useAssessmentStore.getState().syncFromSupabase();
+  // ✅ FIX: userStore juga perlu di-sync ulang tiap ada session baru
+  // (login, ganti akun, token refresh, resume app), bukan cuma pas
+  // tombol login ditekan di AuthScreen.
+  useUserStore.getState().syncFromSupabase();
 };
 
 export default function RootLayout() {

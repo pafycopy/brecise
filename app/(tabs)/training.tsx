@@ -312,7 +312,7 @@ const Training = () => {
   return (
     <View style={styles.container}>
 
-      <Header title="Calendar" />
+      <Header title="Kalender" />
 
       <ScrollView
         showsVerticalScrollIndicator={false}

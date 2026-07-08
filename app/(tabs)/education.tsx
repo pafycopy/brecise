@@ -48,7 +48,7 @@ const Education = () => {
 
   return (
     <View style={styles.container}>
-      <Header title="Education" />
+      <Header title="Edukasi" />
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}

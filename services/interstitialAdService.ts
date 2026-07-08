@@ -13,7 +13,10 @@ if (!isExpoGo) {
 
 const PROD_INTERSTITIAL_ID = 'ca-app-pub-6314173942507588/1903282176';
 
-const adUnitId = __DEV__ ? TestIds?.INTERSTITIAL : PROD_INTERSTITIAL_ID;
+// EXPO_PUBLIC_ADS_TEST_MODE=true di eas.json profile preview
+// bikin build preview tetap pakai test ads walau __DEV__ = false (release mode)
+const isTestBuild = process.env.EXPO_PUBLIC_ADS_TEST_MODE === 'true';
+const adUnitId = (__DEV__ || isTestBuild) ? TestIds?.INTERSTITIAL : PROD_INTERSTITIAL_ID;
 
 let interstitial: any = null;
 let isLoaded = false;
