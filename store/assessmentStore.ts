@@ -25,10 +25,16 @@ export type AssessmentData = {
 type AssessmentStore = {
   isCompleted:          boolean;
   assessment:           AssessmentData | null;
-  // ✅ FIX: simpan userId pemilik data ini, dipakai sebagai pengaman
+  // simpan userId pemilik data ini, dipakai sebagai pengaman
   // tambahan supaya data akun lama nggak pernah "nyangkut" ke akun baru,
   // independen dari tracking lastUserId di _layout.tsx.
   userId:               string | null;
+  // ✅ FIX: penanda apakah syncFromSupabase untuk SESI SEKARANG sudah selesai
+  // (sukses ataupun gagal). Dipakai _layout.tsx supaya popup assessment
+  // TIDAK muncul berdasarkan timer sembarangan — harus nunggu hasil fetch
+  // yang sebenarnya dulu, biar gak "flash" muncul padahal akun itu
+  // sebenarnya sudah punya program/assessment.
+  hasSynced:            boolean;
   setAssessment:        (data: AssessmentData) => Promise<void>;
   resetAssessment:      () => void;
   syncFromSupabase:     () => Promise<void>;
@@ -39,6 +45,7 @@ const initialState = {
   isCompleted: false,
   assessment:  null as AssessmentData | null,
   userId:      null as string | null,
+  hasSynced:   false,
 };
 
 // ─── Store ────────────────────────────────────────────────────────────────────
@@ -89,9 +96,12 @@ export const useAssessmentStore = create<AssessmentStore>()(
       syncFromSupabase: async () => {
         try {
           const { data: { user } } = await supabase.auth.getUser();
-          if (!user) return;
+          if (!user) {
+            set({ hasSynced: true });
+            return;
+          }
 
-          // ✅ FIX: pengaman lapis kedua — kalau data lokal ternyata
+          // pengaman lapis kedua — kalau data lokal ternyata
           // kepunyaan user LAIN (misalnya karena resetAllUserStores gagal
           // jalan tepat waktu saat switch akun), paksa reset dulu sebelum
           // memutuskan apa-apa lagi.
@@ -108,30 +118,35 @@ export const useAssessmentStore = create<AssessmentStore>()(
             .limit(1)
             .single();
 
-          // ✅ FIX: PGRST116 = "no rows found" → ini satu-satunya kondisi
+          // PGRST116 = "no rows found" → ini satu-satunya kondisi
           // yang berarti user BENAR-BENAR belum punya assessment.
           // Untuk error lain (network timeout, koneksi putus, dll),
           // JANGAN timpa isCompleted yang sudah benar — biarkan state
           // lokal (hasil persist) tetap dipakai.
           if (error) {
             if (error.code === 'PGRST116') {
-              set({ assessment: null, isCompleted: false, userId: user.id });
+              set({ assessment: null, isCompleted: false, userId: user.id, hasSynced: true });
             } else {
               console.error('[assessmentStore] syncFromSupabase fetch error (kept local state):', error);
+              set({ hasSynced: true });
             }
             return;
           }
 
           if (!data) {
-            set({ assessment: null, isCompleted: false, userId: user.id });
+            set({ assessment: null, isCompleted: false, userId: user.id, hasSynced: true });
             return;
           }
 
           // Hydrate ke store lokal
-          set({ assessment: data.data as AssessmentData, isCompleted: true, userId: user.id });
+          set({ assessment: data.data as AssessmentData, isCompleted: true, userId: user.id, hasSynced: true });
         } catch (err) {
           // Error jaringan/exception lain → JANGAN reset, cukup log.
           console.error('[assessmentStore] syncFromSupabase error (kept local state):', err);
+          // ✅ FIX: tetap tandai hasSynced = true walau error, supaya
+          // _layout.tsx gak nunggu selamanya dan popup assessment tetap
+          // bisa dievaluasi (pakai state lokal yang ada) bukan macet nunggu.
+          set({ hasSynced: true });
         }
       },
 

@@ -16,7 +16,14 @@ const PROD_INTERSTITIAL_ID = 'ca-app-pub-6314173942507588/1903282176';
 // EXPO_PUBLIC_ADS_TEST_MODE=true di eas.json profile preview
 // bikin build preview tetap pakai test ads walau __DEV__ = false (release mode)
 const isTestBuild = process.env.EXPO_PUBLIC_ADS_TEST_MODE === 'true';
-const adUnitId = (__DEV__ || isTestBuild) ? TestIds?.INTERSTITIAL : PROD_INTERSTITIAL_ID;
+
+// ✅ Override manual: set EXPO_PUBLIC_ADS_FORCE_REAL=true pas expo run:android
+// kalau mau lihat iklan ASLI walau ini dev build. Lihat lib/adsConfig.ts
+// untuk cara pakainya.
+const forceReal = process.env.EXPO_PUBLIC_ADS_FORCE_REAL === 'true';
+const useTestAds = (__DEV__ || isTestBuild) && !forceReal;
+
+const adUnitId = useTestAds ? TestIds?.INTERSTITIAL : PROD_INTERSTITIAL_ID;
 
 let interstitial: any = null;
 let isLoaded = false;
@@ -29,7 +36,7 @@ function createAndLoadAd() {
   });
 
   interstitial.addAdEventListener(AdEventType.LOADED, () => {
-    console.log('✅ Interstitial ad loaded');
+    console.log('✅ Interstitial ad loaded', useTestAds ? '(test ad)' : '(⚠️ IKLAN ASLI — jangan diklik)');
     isLoaded = true;
   });
 

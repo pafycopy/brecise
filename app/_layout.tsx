@@ -9,7 +9,7 @@ import { supabase, clearInvalidSession } from '@/lib/supabase';
 import AssessmentFlow from '@/components/ui/assessment/assessmentflow';
 import { useAssessmentStore } from '@/store/assessmentStore';
 import { useUserStore } from '@/store/userStore';
-import { setupPurchaseListeners, initIAP, closeIAP, checkProStatus } from '@/lib/proService';
+import { setupPurchaseListeners, initIAP, closeIAP, checkProStatus, restorePurchases } from '@/lib/proService';
 import { useNotificationStore } from '@/store/notificationStore';
 import { useWorkoutStore } from '@/store/supabaseWorkoutStore';
 import { useProStore } from '@/store/proStore';
@@ -24,8 +24,9 @@ const resetAllUserStores = () => {
   useWorkoutStore.getState().resetStore();
   useProStore.getState().resetStore();
   useAssessmentStore.getState().resetStore();
-  // ✅ FIX: userStore (nama, lokasi, avatar, dll) sebelumnya tidak pernah
-  // di-reset di sini — itu penyebab nama & data profil "nyangkut" ke akun baru.
+  // userStore (nama, lokasi, avatar, dll) juga direset — sebelumnya store
+  // ini tidak pernah di-reset di sini, itu penyebab nama & data profil
+  // "nyangkut" ke akun baru.
   useUserStore.getState().resetStore();
 };
 
@@ -34,10 +35,15 @@ const loadUserData = () => {
   checkProStatus();
   useWorkoutStore.getState().fetchWorkouts();
   useAssessmentStore.getState().syncFromSupabase();
-  // ✅ FIX: userStore juga perlu di-sync ulang tiap ada session baru
-  // (login, ganti akun, token refresh, resume app), bukan cuma pas
-  // tombol login ditekan di AuthScreen.
+  // userStore juga di-sync ulang tiap ada session baru (login, ganti akun,
+  // token refresh, resume app), bukan cuma pas tombol login di AuthScreen.
   useUserStore.getState().syncFromSupabase();
+  // FIX: restorePurchases() di IAP setup effect bisa race dan jalan
+  // SEBELUM session Supabase ready (dua useEffect independen, gak ada
+  // jaminan urutan). Kalau itu kejadian, saveProToSupabase() di dalamnya
+  // gagal diam-diam karena belum ada user login. Panggil lagi di sini,
+  // karena loadUserData() cuma jalan pas session SUDAH pasti ada.
+  restorePurchases().catch(() => {});
 };
 
 export default function RootLayout() {
@@ -46,7 +52,7 @@ export default function RootLayout() {
   const [session, setSession] = useState<any>(undefined);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
   const [isResettingPassword, setIsResettingPassword] = useState(false);
-  const { isCompleted } = useAssessmentStore();
+  const { isCompleted, hasSynced } = useAssessmentStore();
   const [showAssessment, setShowAssessment] = useState(false);
   const [isNavigationReady, setIsNavigationReady] = useState(false);
 
@@ -64,6 +70,11 @@ export default function RootLayout() {
       const connected = await initIAP();
       if (connected) {
         cleanupListeners = setupPurchaseListeners();
+        // Jaring pengaman — kalau dulu ada pembelian yang gagal ke-sync ke
+        // Supabase (misal koneksi putus pas itu), restore otomatis ini
+        // bakal nangkep & benerin status Pro di background secara silent,
+        // tanpa user perlu sadar ada masalah atau klik tombol manual.
+        restorePurchases().catch(() => {});
       }
     };
 
@@ -109,7 +120,7 @@ export default function RootLayout() {
       }
 
       if (_event === 'SIGNED_OUT') {
-        // ✅ Reset semua store biar data akun lama ga nyangkut
+        // Reset semua store biar data akun lama ga nyangkut
         resetAllUserStores();
         lastUserId = null;
         setSession(null);
@@ -119,7 +130,7 @@ export default function RootLayout() {
       if (session) {
         const newUserId = session.user.id;
 
-        // ✅ Reset store kalau user berubah (ganti akun tanpa logout eksplisit,
+        // Reset store kalau user berubah (ganti akun tanpa logout eksplisit,
         // misalnya lewat OAuth langsung ganti akun)
         if (lastUserId && lastUserId !== newUserId) {
           resetAllUserStores();
@@ -188,12 +199,18 @@ export default function RootLayout() {
   }, [session, segments, isNavigationReady, isAuthLoading, isResettingPassword]);
 
   // ── Assessment ────────────────────────────────────────────────────────────
+  // FIX: sebelumnya popup assessment bisa muncul "nyelonong" duluan sebelum
+  // syncFromSupabase() dari assessmentStore beneran selesai (race condition
+  // antara timer 700ms vs waktu fetch ke Supabase). Sekarang nunggu
+  // `hasSynced` benar-benar true dulu, baru dievaluasi apakah perlu
+  // nampilin assessment atau nggak — jadi gak akan "flash" muncul padahal
+  // akun itu sebenarnya sudah punya program/assessment.
   useEffect(() => {
-    if (session && !isCompleted && !isResettingPassword) {
+    if (session && hasSynced && !isCompleted && !isResettingPassword) {
       const timer = setTimeout(() => setShowAssessment(true), 700);
       return () => clearTimeout(timer);
     }
-  }, [session, isCompleted, isResettingPassword]);
+  }, [session, isCompleted, hasSynced, isResettingPassword]);
 
   // ── Refresh Laporan Mingguan ─────────────────────────────────────────────
   useEffect(() => {
