@@ -36,7 +36,7 @@ type AssessmentStore = {
   // sebenarnya sudah punya program/assessment.
   hasSynced:            boolean;
   setAssessment:        (data: AssessmentData) => Promise<void>;
-  resetAssessment:      () => void;
+  resetAssessment:      () => Promise<void>;
   syncFromSupabase:     () => Promise<void>;
   resetStore:           () => void; // dipanggil pas ganti/logout akun
 };
@@ -89,8 +89,29 @@ export const useAssessmentStore = create<AssessmentStore>()(
         }
       },
 
-      // Reset lokal (tidak hapus dari Supabase — data historis tetap aman)
-      resetAssessment: () => set({ assessment: null, isCompleted: false }),
+      // Reset lokal DAN hapus dari Supabase — program benar-benar dihapus,
+      // bukan cuma disembunyikan di device ini. Ini mencegah data lama
+      // "nyangkut" lagi setelah logout/login (di-fetch ulang oleh
+      // syncFromSupabase dan bikin card "Program Aktif" muncul lagi).
+      resetAssessment: async () => {
+        // 1. Update lokal dulu agar UI langsung responsif
+        set({ assessment: null, isCompleted: false });
+
+        // 2. Hapus dari Supabase
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (!user) return;
+
+          const { error } = await supabase
+            .from('assessments')
+            .delete()
+            .eq('user_id', user.id);
+
+          if (error) console.error('[assessmentStore] resetAssessment delete error:', error);
+        } catch (err) {
+          console.error('[assessmentStore] resetAssessment error:', err);
+        }
+      },
 
       // Hydrate dari Supabase saat login / install ulang / token refresh
       syncFromSupabase: async () => {

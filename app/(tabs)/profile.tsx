@@ -66,7 +66,7 @@ const ProfileScreen = () => {
           onPress: async () => {
             try {
               await clearGeneratedWorkouts();
-              resetAssessment();
+              await resetAssessment();
             } catch (err) {
               console.error("Gagal menghapus program:", err);
             }
