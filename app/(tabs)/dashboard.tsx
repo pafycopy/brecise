@@ -51,6 +51,7 @@ const Dashboard = () => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
+        <Text style={styles.tipsLabel}>Tips</Text>
         <TipsCard tip={tip} onPress={handleTipPress} />
 
         {hasActivePlan && (
@@ -96,5 +97,11 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.light.background },
   scrollContent: {
     paddingHorizontal: 16, paddingTop: 12, paddingBottom: 40, gap: 14,
+  },
+  tipsLabel: {
+    paddingHorizontal: 16,
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#1A1A1A',
   },
 });
