@@ -5,6 +5,8 @@ import AssessmentScreen from '@/components/ui/assessment/assessmentscreen';
 import ProgramResultScreen from '@/components/ui/assessment/programresultscreen';
 import { useAssessmentStore, AssessmentData } from '@/store/assessmentStore';
 import { useWorkoutStore } from '@/store/supabaseWorkoutStore';
+import { useProStore } from '@/store/proStore';
+import { showInterstitialAd } from '@/services/interstitialAdService';
 import { GeneratedDay } from '@/utils/generateProgram';
 
 type Props = {
@@ -18,6 +20,7 @@ export default function AssessmentFlow({ visible, onClose }: Props) {
   const router = useRouter();
   const { setAssessment } = useAssessmentStore();
   const { addWorkout, clearGeneratedWorkouts } = useWorkoutStore();
+  const isPro = useProStore((s) => s.isPro);
 
   const [flowStep,       setFlowStep]       = useState<FlowStep>('assessment');
   const [assessmentData, setAssessmentData] = useState<AssessmentData | null>(null);
@@ -44,6 +47,10 @@ export default function AssessmentFlow({ visible, onClose }: Props) {
     // Reset flow
     setFlowStep('assessment');
     onClose();
+
+    if (!isPro) {
+      showInterstitialAd();
+    }
 
     // Arahkan ke tab training agar user langsung lihat program
     router.push('/(tabs)/training');

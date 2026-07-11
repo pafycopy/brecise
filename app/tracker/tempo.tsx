@@ -607,7 +607,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
 
-  phaseTitleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10 },
+  phaseTitleRow: { flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6 },
   phaseTitle:    { fontSize: 20, fontWeight: '800', textAlign: 'center' },
 
   badge:     { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },

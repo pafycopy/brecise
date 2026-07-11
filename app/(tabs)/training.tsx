@@ -37,6 +37,8 @@ import {
 } from '@/store/supabaseWorkoutStore';
 
 import { resolveStats } from '@/utils/resolveWorkoutStats';
+import { useProStore } from '@/store/proStore';
+import { showInterstitialAd } from '@/services/interstitialAdService';
 
 // ─────────────────────────────────────────────
 // FORM REGISTRY
@@ -92,6 +94,8 @@ const Training = () => {
     deleteWorkout,
     fetchWorkouts,
   } = useWorkoutStore();
+
+  const isPro = useProStore((s) => s.isPro);
 
   // ✅ fetch supabase
   useEffect(() => {
@@ -162,6 +166,10 @@ const Training = () => {
     setFormVisible(false);
 
     setEditingWorkout(null);
+
+    if (!isPro) {
+      showInterstitialAd();
+    }
   };
 
   // ─────────────────────────
