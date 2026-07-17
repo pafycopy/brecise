@@ -31,7 +31,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 6,
     padding: 30,
-    marginHorizontal:16,
+    marginHorizontal:4,
     gap: 6,
     overflow: 'hidden',
     shadowColor: '#000',

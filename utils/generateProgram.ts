@@ -337,6 +337,12 @@ export const generateProgram = (assessment: AssessmentData): GeneratedDay[] => {
   const isBeginner  = level === "beginner";
   const isAllowed   = (type: WorkoutType) => !INJURY_AVOID[injury].includes(type);
 
+  // ✅ NEW: Untuk level beginner dengan 2 hari latihan/minggu, slot Long Run
+  // diganti jadi Easy Run — dianggap masih terlalu berat untuk pemula dengan
+  // frekuensi latihan serendah itu. Strength Training tetap dipertahankan
+  // seperti biasa (tidak terpengaruh flag ini).
+  const isTwoDayBeginner = isBeginner && daysPerWeek === 2;
+
   for (let week = 1; week <= 4; week++) {
     const slots = pickTrainingDays(daysPerWeek);
 
@@ -346,7 +352,7 @@ export const generateProgram = (assessment: AssessmentData): GeneratedDay[] => {
       if (speedPool.length > 0) speedWorkout = speedPool[(week - 1) % speedPool.length];
     }
 
-    const longRunAvailable  = isAllowed("Long Run");
+    const longRunAvailable  = !isTwoDayBeginner && isAllowed("Long Run");
     const strengthAvailable = isAllowed("Strength Training");
 
     const weeklyPlan = buildWeeklyPlan(
