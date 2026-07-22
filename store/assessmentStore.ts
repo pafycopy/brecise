@@ -5,11 +5,11 @@ import { supabase } from '@/lib/supabase';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 export type RunningLevel   = 'beginner' | 'intermediate' | 'advanced';
-export type RunningGoal    = 'weight_loss' | 'stamina' | 'target_5k' | 'target_10k';
+export type RunningGoal    = 'start_running' | 'weight_loss' | 'stamina' | 'target_5k' | 'target_10k';
 export type FurthestRun    = 'less_1k' | '1_3k' | 'more_3k' | 'unknown';
 export type TrainingTime   = 'pagi' | 'siang' | 'malam';
 export type ActivityLevel  = 'sedentary' | 'active' | 'very_active';
-export type InjuryHistory  = 'none' | 'knee' | 'ankle' | 'shin_splints' | 'other';
+export type InjuryHistory  = 'none' | 'knee' | 'hip' | 'shin_splints' | 'ankle' | 'back' | 'other';
 
 export type AssessmentData = {
   level:         RunningLevel;
@@ -19,6 +19,9 @@ export type AssessmentData = {
   preferredTime: TrainingTime;
   activityLevel: ActivityLevel;
   injury:        InjuryHistory;
+  // ✅ NEW: penjelasan bebas dari user soal cederanya, opsional,
+  // diisi lewat input teks di step Riwayat Cedera.
+  injuryNote?:   string;
 };
 
 // ─── Store Type ───────────────────────────────────────────────────────────────

@@ -15,31 +15,34 @@ export default function WeeklyActivityLabel({ label, sublabel }: Props) {
   );
 }
 
+// ✅ FIX: includeFontPadding: false ditambah ke semua Text style, konsisten
+// dengan fix di TipsCard.
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#FFFFFF',
+    
     borderRadius: 16,
     paddingHorizontal: 20,
     paddingVertical: 16,
     shadowColor: '#000',
     shadowOpacity: 0.04,
     shadowRadius: 8,
-    elevation: 2,
+    elevation: 0,
     marginBottom: 6,
   },
   sublabel: {
     fontSize: 12,
-
     color: '#111',
     letterSpacing: 0.8,
-    fontFamily:'Lexend-Bold'
+    fontFamily: 'Lexend-Bold',
+    includeFontPadding: false,
   },
   label: {
     fontSize: 14,
     fontWeight: '800',
     color: '#4CD964',
+    includeFontPadding: false,
   },
 });

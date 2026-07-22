@@ -1,3 +1,4 @@
+import '@/services/backgroundLocationTask';
 import { useEffect, useState } from 'react';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
@@ -16,6 +17,8 @@ import { useProStore } from '@/store/proStore';
 import { scheduleWeeklyReport } from '@/lib/notifications';
 import { configureAds } from '@/lib/adsconfig';
 import { initInterstitialAd } from '@/services/interstitialAdService';
+// ✅ NEW: engine coach mark / spotlight tutorial
+import { CoachMarkProvider } from '@/components/ui/coachmark/CoachMarkProvider';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -267,30 +270,35 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
-      <SafeAreaView style={{ flex: 1, backgroundColor: '#E5E5E5' }}>
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="(tabs)" />
-          <Stack.Screen name="auth" />
-          <Stack.Screen name="settings" />
-          <Stack.Screen name="about" />
-          <Stack.Screen name="privacy" />
-          <Stack.Screen name="pro" />
-        </Stack>
+      {/* ✅ NEW: bungkus seluruh app dengan CoachMarkProvider, sekali di root,
+          supaya overlay spotlight bisa muncul di atas layar mana pun (Stack,
+          AssessmentFlow, dst) tanpa perlu didaftarkan ulang per halaman. */}
+      <CoachMarkProvider>
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#E0E3E5' }}>
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="(tabs)" />
+            <Stack.Screen name="auth" />
+            <Stack.Screen name="settings" />
+            <Stack.Screen name="about" />
+            <Stack.Screen name="privacy" />
+            <Stack.Screen name="pro" />
+          </Stack>
 
-        <AssessmentFlow
-          visible={showAssessment}
-          onClose={handleAssessmentClose}
-        />
-        {isAuthLoading && (
-          <View style={{
-            position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-            justifyContent: 'center', alignItems: 'center',
-            backgroundColor: '#FFFFFF',
-          }}>
-            <ActivityIndicator size="large" color="#6BFF8F" />
-          </View>
-        )}
-      </SafeAreaView>
+          <AssessmentFlow
+            visible={showAssessment}
+            onClose={handleAssessmentClose}
+          />
+          {isAuthLoading && (
+            <View style={{
+              position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+              justifyContent: 'center', alignItems: 'center',
+              backgroundColor: '#FFFFFF',
+            }}>
+              <ActivityIndicator size="large" color="#6BFF8F" />
+            </View>
+          )}
+        </SafeAreaView>
+      </CoachMarkProvider>
     </SafeAreaProvider>
   );
 }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -40,6 +40,12 @@ import { resolveStats } from '@/utils/resolveWorkoutStats';
 import { useProStore } from '@/store/proStore';
 import { showInterstitialAd } from '@/services/interstitialAdService';
 
+// ✅ coach mark / spotlight tutorial
+import { useCoachMark, CoachMarkStep } from '@/components/ui/coachmark/CoachMarkProvider';
+import CoachMarkTarget from '@/components/ui/coachmark/CoachMarkTarget';
+import { useCoachMarkScrollView } from '@/components/ui/coachmark/useCoachMarkScrollView';
+import { useCoachMarkStore } from '@/store/coachMarkStore';
+
 // ─────────────────────────────────────────────
 // FORM REGISTRY
 // ─────────────────────────────────────────────
@@ -51,10 +57,7 @@ interface BaseFormProps {
   onSave: (values: any) => void;
 }
 
-const FORM_REGISTRY: Record<
-  string,
-  React.ComponentType<BaseFormProps>
-> = {
+const FORM_REGISTRY: Record<string, React.ComponentType<BaseFormProps>> = {
   'Tempo Run':
     TempoRunForm as React.ComponentType<BaseFormProps>,
 
@@ -76,6 +79,40 @@ const TRACKER_REGISTRY: Record<string, string> = {
 
 // Tipe workout yang sudah pakai range pace (paceMin/paceMax), bukan single pace
 const RANGE_PACE_TYPES = ['Easy Run', 'Long Run'];
+
+// ─────────────────────────────────────────────
+// COACH MARK TOUR STEPS (statis, karena section-nya fixed — beda dari
+// Education yang jumlah card-nya dinamis ngikutin data)
+// ─────────────────────────────────────────────
+
+const planTourSteps: CoachMarkStep[] = [
+  {
+    id: 'plan-calendar',
+    title: 'Kalender Mingguan',
+    description: 'Geser atau tap tanggal buat lihat jadwal latihan di hari lain.',
+    paddingTop: 2,
+        paddingBottom: 6,
+        offsetY: 30,
+  },
+  {
+    id: 'plan-today',
+    title: 'Jadwal Hari Ini',
+    description: 'Latihan yang dijadwalkan buat hari yang lagi dipilih muncul di sini. Kalau sudah waktunya, tap "Mulai" untuk memulai latihan.',
+    paddingTop: 2,
+        paddingBottom: 6,
+        offsetY: 36,
+  },
+  {
+    id: 'plan-add-training',
+    title: 'Tambah Latihan',
+    description: 'Mau nambah latihan baru? Pilih tipe latihannya di sini, misalnya Easy Run, Tempo Run, atau Strength Training.',
+    paddingTop: 2,
+        paddingBottom: 6,
+        offsetY: 30,
+        forceTooltipPosition: 'above',
+        tooltipOffsetY: 600,
+  },
+];
 
 // ─────────────────────────────────────────────
 // SCREEN
@@ -125,6 +162,24 @@ const Training = () => {
 
   const [editingWorkout, setEditingWorkout] =
     useState<SavedWorkout | null>(null);
+
+  // ✅ coach mark setup
+  const { startTour } = useCoachMark();
+  const hasSeenTour  = useCoachMarkStore((s) => s.hasSeenTour);
+  const markTourSeen = useCoachMarkStore((s) => s.markTourSeen);
+  const { scrollRef, onScroll } = useCoachMarkScrollView('plan');
+
+  useEffect(() => {
+    if (hasSeenTour('plan')) return;
+    const timer = setTimeout(() => {
+      startTour('plan', planTourSteps, {
+        scrollViewId: 'plan',
+        onFinish: () => markTourSeen('plan'),
+      });
+    }, 700);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // ─────────────────────────
   // SELECT TRAINING
@@ -313,258 +368,265 @@ const Training = () => {
         }
       );
 
-  // ─────────────────────────
-  // RENDER
-  // ─────────────────────────
-
   return (
     <View style={styles.container}>
 
       <Header title="Kalender" />
 
       <ScrollView
+        ref={scrollRef}
+        onScroll={onScroll}
+        scrollEventThrottle={16}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={
           styles.scrollContent
         }
       >
 
-        <WeekCalendar />
+        <CoachMarkTarget id="plan-calendar">
+          <WeekCalendar />
+        </CoachMarkTarget>
 
-        <View style={styles.todaySection}>
+        <CoachMarkTarget id="plan-today">
+          <View style={styles.todaySection}>
 
-          <Text style={styles.sectionTitle}>
-            {sectionTitle}
-          </Text>
+            <Text style={styles.sectionTitle}>
+              {sectionTitle}
+            </Text>
 
-          {todayWorkouts.length === 0 ? (
+            {todayWorkouts.length === 0 ? (
 
-            <TodayWorkoutCard isEmpty />
+              <TodayWorkoutCard isEmpty />
 
-          ) : (
+            ) : (
 
-            todayWorkouts.map((workout) => (
+              todayWorkouts.map((workout) => (
 
-              <TodayWorkoutCard
-                key={workout.uid}
+                <TodayWorkoutCard
+                  key={workout.uid}
 
-                workoutType={workout.workoutType}
+                  workoutType={workout.workoutType}
 
-                workoutName={workout.workoutName}
+                  workoutName={workout.workoutName}
 
-                stats={resolveStats(workout)}
+                  stats={resolveStats(workout)}
 
-                status={
-                  workout.status === 'completed'
-                    ? 'completed'
-                    : isPastDate
-                    ? 'missed'
-                    : 'planned'
-                }
+                  status={
+                    workout.status === 'completed'
+                      ? 'completed'
+                      : isPastDate
+                      ? 'missed'
+                      : 'planned'
+                  }
 
-                // ✅ fitur baru
-                onStartPress={
-                  isSelectedToday &&
-                  workout.status !== 'completed'
-                    ? () =>
-                        handleStartWorkout(workout)
-                    : undefined
-                }
+                  // ✅ fitur baru
+                  onStartPress={
+                    isSelectedToday &&
+                    workout.status !== 'completed'
+                      ? () =>
+                          handleStartWorkout(workout)
+                      : undefined
+                  }
 
-                startDisabled={
-                  !isSelectedToday ||
-                  workout.status === 'completed'
-                }
+                  startDisabled={
+                    !isSelectedToday ||
+                    workout.status === 'completed'
+                  }
 
-                // pace tunggal — HANYA untuk tipe yang masih pakai target pace
-                // tunggal (bukan Tempo/Interval yang punya komponen sendiri,
-                // dan bukan Easy Run/Long Run yang sekarang pakai range pace)
-                paceResult={
-                  workout.trackingResult &&
-                  workout.pace &&
-                  workout.distance &&
-                  workout.workoutType !== 'Tempo Run' &&
-                  workout.workoutType !== 'Interval Run' &&
-                  !RANGE_PACE_TYPES.includes(workout.workoutType)
-                    ? {
-                        targetPace:
-                          workout.pace,
+                  // pace tunggal — HANYA untuk tipe yang masih pakai target pace
+                  // tunggal (bukan Tempo/Interval yang punya komponen sendiri,
+                  // dan bukan Easy Run/Long Run yang sekarang pakai range pace)
+                  paceResult={
+                    workout.trackingResult &&
+                    workout.pace &&
+                    workout.distance &&
+                    workout.workoutType !== 'Tempo Run' &&
+                    workout.workoutType !== 'Interval Run' &&
+                    !RANGE_PACE_TYPES.includes(workout.workoutType)
+                      ? {
+                          targetPace:
+                            workout.pace,
 
-                        actualPace:
-                          workout.trackingResult.actualPace,
+                          actualPace:
+                            workout.trackingResult.actualPace,
 
-                        targetDistance:
-                          workout.distance,
+                          targetDistance:
+                            workout.distance,
 
-                        actualDistance:
-                          workout.trackingResult.actualDistance,
-                      }
-                    : undefined
-                }
+                          actualDistance:
+                            workout.trackingResult.actualDistance,
+                        }
+                      : undefined
+                  }
 
-                // pace range — Easy Run & Long Run (cek masuk range atau tidak,
-                // bukan dibandingkan ke satu target pace tunggal)
-                paceRangeResult={
-                  workout.trackingResult &&
-                  workout.paceMin != null &&
-                  workout.paceMax != null &&
-                  workout.distance &&
-                  RANGE_PACE_TYPES.includes(workout.workoutType)
-                    ? {
-                        paceMin:
-                          workout.paceMin,
+                  // pace range — Easy Run & Long Run (cek masuk range atau tidak,
+                  // bukan dibandingkan ke satu target pace tunggal)
+                  paceRangeResult={
+                    workout.trackingResult &&
+                    workout.paceMin != null &&
+                    workout.paceMax != null &&
+                    workout.distance &&
+                    RANGE_PACE_TYPES.includes(workout.workoutType)
+                      ? {
+                          paceMin:
+                            workout.paceMin,
 
-                        paceMax:
-                          workout.paceMax,
+                          paceMax:
+                            workout.paceMax,
 
-                        actualPace:
-                          workout.trackingResult.actualPace,
+                          actualPace:
+                            workout.trackingResult.actualPace,
 
-                        targetDistance:
-                          workout.distance,
+                          targetDistance:
+                            workout.distance,
 
-                        actualDistance:
-                          workout.trackingResult.actualDistance,
-                      }
-                    : undefined
-                }
+                          actualDistance:
+                            workout.trackingResult.actualDistance,
+                        }
+                      : undefined
+                  }
 
-                // tempo — 3 fase lengkap: warmup, tempo session, cooldown
-                tempoResult={
-                  workout.workoutType ===
-                    'Tempo Run' &&
-                  workout.trackingResult
-                    ?.phaseResults &&
-                  workout.warmup &&
-                  workout.tempo &&
-                  workout.cooldown
-                    ? {
-                        phases: [
-                          {
-                            label:
-                              '🔥 WARM UP',
+                  // tempo — 3 fase lengkap: warmup, tempo session, cooldown
+                  tempoResult={
+                    workout.workoutType ===
+                      'Tempo Run' &&
+                    workout.trackingResult
+                      ?.phaseResults &&
+                    workout.warmup &&
+                    workout.tempo &&
+                    workout.cooldown
+                      ? {
+                          phases: [
+                            {
+                              label:
+                                '🔥 WARM UP',
 
-                            targetDistance:
-                              workout.warmup.distance,
+                              targetDistance:
+                                workout.warmup.distance,
 
-                            actualDistance:
-                              workout
-                                .trackingResult
-                                .phaseResults
-                                .warmup
-                                .actualDistance,
+                              actualDistance:
+                                workout
+                                  .trackingResult
+                                  .phaseResults
+                                  .warmup
+                                  .actualDistance,
 
-                            targetPace:
-                              workout.warmup.pace,
+                              targetPace:
+                                workout.warmup.pace,
 
-                            actualPace:
-                              workout
-                                .trackingResult
-                                .phaseResults
-                                .warmup
-                                .actualPace,
-                          },
-                          {
-                            label:
-                              '⚡ TEMPO SESSION',
+                              actualPace:
+                                workout
+                                  .trackingResult
+                                  .phaseResults
+                                  .warmup
+                                  .actualPace,
+                            },
+                            {
+                              label:
+                                '⚡ TEMPO SESSION',
 
-                            targetDistance:
-                              workout.tempo.distance,
+                              targetDistance:
+                                workout.tempo.distance,
 
-                            actualDistance:
-                              workout
-                                .trackingResult
-                                .phaseResults
-                                .tempo
-                                .actualDistance,
+                              actualDistance:
+                                workout
+                                  .trackingResult
+                                  .phaseResults
+                                  .tempo
+                                  .actualDistance,
 
-                            targetPace:
-                              workout.tempo.targetPace,
+                              targetPace:
+                                workout.tempo.targetPace,
 
-                            actualPace:
-                              workout
-                                .trackingResult
-                                .phaseResults
-                                .tempo
-                                .actualPace,
-                          },
-                          {
-                            label:
-                              '❄️ COOL DOWN',
+                              actualPace:
+                                workout
+                                  .trackingResult
+                                  .phaseResults
+                                  .tempo
+                                  .actualPace,
+                            },
+                            {
+                              label:
+                                '❄️ COOL DOWN',
 
-                            targetDistance:
-                              workout.cooldown.distance,
+                              targetDistance:
+                                workout.cooldown.distance,
 
-                            actualDistance:
-                              workout
-                                .trackingResult
-                                .phaseResults
-                                .cooldown
-                                .actualDistance,
+                              actualDistance:
+                                workout
+                                  .trackingResult
+                                  .phaseResults
+                                  .cooldown
+                                  .actualDistance,
 
-                            targetPace:
-                              workout.cooldown.pace,
+                              targetPace:
+                                workout.cooldown.pace,
 
-                            actualPace:
-                              workout
-                                .trackingResult
-                                .phaseResults
-                                .cooldown
-                                .actualPace,
-                          },
-                        ],
-                      }
-                    : undefined
-                }
+                              actualPace:
+                                workout
+                                  .trackingResult
+                                  .phaseResults
+                                  .cooldown
+                                  .actualPace,
+                            },
+                          ],
+                        }
+                      : undefined
+                  }
 
-                // interval
-                intervalResult={
-                  workout.workoutType ===
-                    'Interval Run' &&
-                  workout.trackingResult
-                    ?.repResults
-                    ? {
-                        targetDistance:
-                          parseFloat(
-                            workout.distance ?? '0'
-                          ),
+                  // interval
+                  intervalResult={
+                    workout.workoutType ===
+                      'Interval Run' &&
+                    workout.trackingResult
+                      ?.repResults
+                      ? {
+                          targetDistance:
+                            parseFloat(
+                              workout.distance ?? '0'
+                            ),
 
-                        targetPace:
-                          workout.pace ?? '0',
+                          targetPace:
+                            workout.pace ?? '0',
 
-                        reps:
-                          workout.trackingResult
-                            .repResults,
-                      }
-                    : undefined
-                }
+                          reps:
+                            workout.trackingResult
+                              .repResults,
+                        }
+                      : undefined
+                  }
 
-                onEdit={() =>
-                  handleEdit(workout)
-                }
+                  onEdit={() =>
+                    handleEdit(workout)
+                  }
 
-                onDelete={() =>
-                  handleDelete(workout.uid)
-                }
+                  onDelete={() =>
+                    handleDelete(workout.uid)
+                  }
+                />
+
+              ))
+            )}
+          </View>
+        </CoachMarkTarget>
+
+        <CoachMarkTarget id="plan-add-training">
+          <View>
+            <Text style={styles.title}>
+              <Ionicons
+                name="add-sharp"
+                size={24}
+                color="#000"
               />
 
-            ))
-          )}
-        </View>
+              {' '}Tambah latihan
+            </Text>
 
-        <Text style={styles.title}>
-          <Ionicons
-            name="add-sharp"
-            size={24}
-            color="#000"
-          />
-
-          {' '}Tambah latihan
-        </Text>
-
-        <TrainingType
-          onSelect={handleSelectTraining}
-        />
+            <TrainingType
+              onSelect={handleSelectTraining}
+            />
+          </View>
+        </CoachMarkTarget>
 
       </ScrollView>
 
@@ -613,7 +675,7 @@ export default Training;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.light.background,
+    backgroundColor: '#F8F9FA',
   },
 
   scrollContent: {

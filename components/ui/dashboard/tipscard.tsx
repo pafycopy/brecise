@@ -43,7 +43,7 @@ const styles = StyleSheet.create({
     shadowColor: '#000',
     shadowOpacity: 0.01,
     shadowRadius: 8,
-    elevation: 1,
+    elevation: 0,
   },
   iconBox: {
     width: 42, height: 42, borderRadius: 21,
@@ -52,5 +52,10 @@ const styles = StyleSheet.create({
   },
   textArea: { flex: 1 },
   title: { fontSize: 14, fontWeight: '700', color: '#111', marginBottom: 3 },
-  description: { fontSize: 12, lineHeight: 18, color: '#777' },
+  // ✅ FIX: includeFontPadding: false — di Android, font metrics bawaan
+  // suka nambah padding vertikal "siluman" di atas/bawah teks yang gak
+  // ikut kehitung secara konsisten sama measureInWindow. Ini yang bikin
+  // tinggi kartu yang ke-ukur suka kurang dari tinggi visual aslinya,
+  // makanya kotak highlight coach mark kelihatan "kurang panjang ke bawah".
+  description: { fontSize: 12, lineHeight: 18, color: '#777', includeFontPadding: false },
 });

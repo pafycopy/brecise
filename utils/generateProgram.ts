@@ -72,15 +72,19 @@ const BASE_CONFIG: Record<string, {
   },
 };
 
+// ✅ UPDATED: tambah 'hip' dan 'back' sesuai opsi baru di step Riwayat Cedera.
 const INJURY_DISTANCE_FACTOR: Record<InjuryHistory, number> = {
-  none: 1.0, knee: 0.7, ankle: 0.7, shin_splints: 0.6, other: 0.8,
+  none: 1.0, knee: 0.7, hip: 0.7, shin_splints: 0.6, ankle: 0.7, back: 0.75, other: 0.8,
 };
 
+// ✅ UPDATED: tambah 'hip' dan 'back'.
 const INJURY_AVOID: Record<InjuryHistory, WorkoutType[]> = {
   none: [],
   knee: ["Interval Run"],
-  ankle: ["Interval Run", "Tempo Run"],
+  hip: ["Interval Run", "Tempo Run"],
   shin_splints: ["Interval Run", "Tempo Run", "Long Run"],
+  ankle: ["Interval Run", "Tempo Run"],
+  back: ["Interval Run"],
   other: [],
 };
 

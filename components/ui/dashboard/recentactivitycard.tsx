@@ -90,24 +90,28 @@ export default function RecentActivityCard({ activities, onSeeAll }: Props) {
   );
 }
 
+// ✅ FIX: includeFontPadding: false ditambah ke semua Text style — konsisten
+// dengan fix di TipsCard, biar tinggi elemen yang ke-ukur measureInWindow
+// selalu match sama tinggi visual aslinya (bukan cuma di card yang kemarin
+// kelihatan kepotong).
 const styles = StyleSheet.create({
   container: {
     backgroundColor: '#FFFFFF',
     borderRadius: 20, padding: 20, gap: 14,
     shadowColor: '#000', shadowOpacity: 0.04,
-    shadowRadius: 8, elevation: 2,
+    shadowRadius: 8, elevation: 0,
   },
   headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  sectionTitle: { fontSize: 16, fontWeight: '800', color: '#111' },
-  seeAll: { fontSize: 13, fontWeight: '600', color: '#4CD964' },
+  sectionTitle: { fontSize: 16, fontWeight: '800', color: '#111', includeFontPadding: false },
+  seeAll: { fontSize: 13, fontWeight: '600', color: '#4CD964', includeFontPadding: false },
   activityRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   activityIcon: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
   activityInfo: { flex: 1 },
-  activityType: { fontSize: 14, fontWeight: '700', color: '#111' },
-  activityLabel: { fontSize: 12, color: '#888', marginTop: 2 },
+  activityType: { fontSize: 14, fontWeight: '700', color: '#111', includeFontPadding: false },
+  activityLabel: { fontSize: 12, color: '#888', marginTop: 2, includeFontPadding: false },
   activityStat: { alignItems: 'flex-end' },
-  activityStatValue: { fontSize: 14, fontWeight: '800', color: '#111' },
-  activityStatSub: { fontSize: 11, color: '#888', marginTop: 1 },
+  activityStatValue: { fontSize: 14, fontWeight: '800', color: '#111', includeFontPadding: false },
+  activityStatSub: { fontSize: 11, color: '#888', marginTop: 1, includeFontPadding: false },
   empty: { paddingVertical: 16, alignItems: 'center' },
-  emptyText: { fontSize: 13, color: '#BBB' },
+  emptyText: { fontSize: 13, color: '#BBB', includeFontPadding: false },
 });

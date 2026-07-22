@@ -1,5 +1,5 @@
 import { StyleSheet, View, ScrollView, Modal } from 'react-native'
-import React, { useState, useCallback } from 'react'
+import React, { useState, useCallback, useMemo, useEffect } from 'react'
 import { useFocusEffect } from '@react-navigation/native'
 
 import Header from '@/components/header'
@@ -15,6 +15,16 @@ import StrengthScreen from '@/components/ui/education/strengthscreen'
 
 import { educationData, EducationTopic } from '@/constants/educationdata'
 import { useUIEducationStore } from '@/store/uieducationstore'
+
+// ✅ coach mark / spotlight tutorial
+import { useCoachMark, CoachMarkStep } from '@/components/ui/coachmark/CoachMarkProvider'
+import CoachMarkTarget from '@/components/ui/coachmark/CoachMarkTarget'
+import { useCoachMarkScrollView } from '@/components/ui/coachmark/useCoachMarkScrollView'
+import { useCoachMarkStore } from '@/store/coachMarkStore'
+
+// Prefix id buat tiap card, biar gampang dibedain dari id topic aslinya.
+// Format: `education-card-${topic.id}`
+const cardStepId = (topicId: string | number) => `education-card-${topicId}`
 
 const Education = () => {
   const [selectedTopic, setSelectedTopic] = useState<EducationTopic | null>(null)
@@ -46,24 +56,91 @@ const Education = () => {
     }
   }
 
+  // ✅ coach mark setup
+  const { startTour } = useCoachMark()
+  const hasSeenTour  = useCoachMarkStore((s) => s.hasSeenTour)
+  const markTourSeen = useCoachMarkStore((s) => s.markTourSeen)
+  const { scrollRef, onScroll } = useCoachMarkScrollView('education')
+
+  // Step tour dibangun dinamis: 1 step buat hero, lalu 1 step per card
+  // sesuai isi educationData. Kalau educationData berubah (nambah/kurang
+  // topic), tour otomatis ngikutin tanpa perlu ubah kode di sini.
+  const educationTourSteps = useMemo<CoachMarkStep[]>(() => {
+    const steps: CoachMarkStep[] = [
+      {
+        id: 'education-hero',
+        title: 'Materi Edukasi',
+        description: 'Di sini kamu bisa belajar berbagai hal seputar lari — mulai dari teknik, pencegahan cedera, sampai pemanasan.',
+        // ✅ hero nempel di paling atas scroll (langsung di bawah Header),
+        // paddingTop default (8) bikin kotak nyerempet ke judul "Edukasi"
+        // di header — dikecilin biar pas ke badan EducationHero aja.
+        paddingTop: 2,
+        paddingBottom: 6,
+        offsetY: 30,
+      },
+    ]
+
+    educationData.forEach((topic, index) => {
+      steps.push({
+        id: cardStepId(topic.id),
+        title: topic.title,
+        description: `Tap kartu ini untuk baca materi lengkap soal "${topic.title}".`,
+        // ✅ card edukasi bentuknya rounded card polos (gak ada shadow
+        // segede StatsRow), jadi padding kecil aja udah pas — default
+        // sebelumnya (8/20/8) kegedean, keliatan dari kotak yang
+        // "nyerempet" ke card/tombol di atasnya.
+        paddingTop: 4,
+        paddingBottom: 4,
+        paddingSide: 4,
+        offsetY: 30,
+        forceTooltipPosition: 'above',
+        tooltipOffsetY: -80,
+        // Card pertama nempel persis di bawah tombol "Featured Video"
+        // hero, kasih dikit lagi jarak biar gak nyerempet ke situ.
+        ...(index === 0 ? { paddingTop: 8 } : {}),
+      })
+    })
+
+    return steps
+  }, [])
+
+  useEffect(() => {
+    if (hasSeenTour('education')) return
+    const timer = setTimeout(() => {
+      startTour('education', educationTourSteps, {
+        scrollViewId: 'education',
+        onFinish: () => markTourSeen('education'),
+      })
+    }, 700)
+    return () => clearTimeout(timer)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   return (
     <View style={styles.container}>
       <Header title="Edukasi" />
 
       <ScrollView
+        ref={scrollRef}
+        onScroll={onScroll}
+        scrollEventThrottle={16}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <EducationHero />
+        <CoachMarkTarget id="education-hero">
+          <EducationHero />
+        </CoachMarkTarget>
+
         {educationData.map((topic) => (
-          <EducationCard
-            key={topic.id}
-            title={topic.title}
-            description={topic.description}
-            icon={topic.icon}
-            color={topic.color}
-            onPress={() => setSelectedTopic(topic)}
-          />
+          <CoachMarkTarget key={topic.id} id={cardStepId(topic.id)}>
+            <EducationCard
+              title={topic.title}
+              description={topic.description}
+              icon={topic.icon}
+              color={topic.color}
+              onPress={() => setSelectedTopic(topic)}
+            />
+          </CoachMarkTarget>
         ))}
       </ScrollView>
 
@@ -82,6 +159,6 @@ const Education = () => {
 export default Education
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.light.background },
+  container: { flex: 1, backgroundColor:'#F8F9FA', },
   scrollContent: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 40 },
 })

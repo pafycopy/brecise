@@ -51,28 +51,44 @@ export default function StatsRow({ totalWorkout, totalDistance, dataByPeriod }: 
         {/* Card Workout */}
         <View style={styles.card}>
           <Text style={styles.label}>TOTAL LATIHAN</Text>
-          <View style={styles.valueRow}>
-            <Text style={styles.value}>{workout}</Text>
-            <Ionicons name="barbell-sharp" size={28} color="#4CD964" style={styles.icon} />
-          </View>
+
+          {/* ✅ CHANGED: ikon sekarang di TENGAH, di ATAS angka (tersusun
+              vertikal) — ikon aslinya (barbell-sharp, hijau) gak diubah,
+              cuma posisinya aja yang dipindah dari samping angka jadi
+              di atas angka. */}
+          <Ionicons
+            name="barbell-sharp"
+            size={28}
+            color="#4CD964"
+            style={styles.icon}
+          />
+
+          <Text style={styles.value}>{workout}</Text>
         </View>
 
         {/* Card Distance */}
         <View style={styles.card}>
           <Text style={styles.label}>TOTAL JARAK</Text>
-          <View style={styles.valueRow}>
-            <Text style={styles.value}>
-              {distance}
-              <Text style={styles.unit}> km</Text>
-            </Text>
-            <Ionicons name="walk" size={28} color="#007AFF" style={styles.icon} />
-          </View>
+
+          <Ionicons
+            name="walk"
+            size={28}
+            color="#007AFF"
+            style={styles.icon}
+          />
+
+          <Text style={styles.value}>
+            {distance}
+            <Text style={styles.unit}> km</Text>
+          </Text>
         </View>
       </View>
     </View>
   );
 }
 
+// ✅ FIX: includeFontPadding: false ditambah ke semua Text style, konsisten
+// dengan fix di TipsCard.
 const styles = StyleSheet.create({
   wrapper: { gap: 10 },
 
@@ -81,6 +97,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 16,
     marginTop: 12,
+    marginBottom: 6
   },
   pill: {
     paddingHorizontal: 16, paddingVertical: 7,
@@ -91,7 +108,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#6BFF8F',
   },
   pillText: {
-    fontSize: 12, fontWeight: '600', color: '#888',
+    fontSize: 12, fontWeight: '600', color: '#888', includeFontPadding: false,
   },
   pillTextActive: {
     color: '#191C1E',
@@ -107,26 +124,29 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 20,
     shadowColor: '#000',
-    shadowOpacity: 0.04,
+    shadowOpacity: 0,
     shadowRadius: 8,
+    // ✅ CHANGED: alignItems tetap center biar konten (label, ikon, angka)
+    // rata tengah horizontal, sesuai gambar referensi.
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 2,
+    elevation: 0,
   },
   label: {
-    fontSize: 12, fontWeight: '700', color: '#111', letterSpacing: 0.5,
+    fontSize: 12, fontWeight: '700', color: '#111', letterSpacing: 0.5, includeFontPadding: false,
   },
-  valueRow: {
-    flexDirection: 'row', alignItems: 'flex-end',
-    gap: 12, marginTop: 32, 
+  // ✅ CHANGED: ikon sekarang jadi elemen tersendiri di TENGAH card,
+  // dengan jarak dari label di atas dan angka di bawahnya.
+  icon: {
+    marginTop: 14,
+    marginBottom: 10,
   },
+  // ✅ CHANGED: value sekarang berdiri sendiri (bukan di dalam valueRow
+  // bareng ikon lagi), rata tengah, tanpa marginHorizontal aneh.
   value: {
-    marginHorizontal: 12, fontSize: 32, fontWeight: '800', color: '#111',
+    fontSize: 32, fontWeight: '800', color: '#111', includeFontPadding: false,
   },
   unit: {
-    fontSize: 14, fontWeight: '600', color: '#111', marginBottom: 3,
-  },
-  icon: {
-    marginBottom: 4, marginHorizontal: 12,
+    fontSize: 14, fontWeight: '600', color: '#111', includeFontPadding: false,
   },
 });

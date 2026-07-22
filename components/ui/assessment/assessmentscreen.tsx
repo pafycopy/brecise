@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity,
-  ScrollView, Animated,
+  ScrollView, Animated, TextInput,
 } from 'react-native';
 import { useSafeAreaInsets, SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -84,6 +84,17 @@ const oc = StyleSheet.create({
   radioDot:     { width: 10, height: 10, borderRadius: 5, backgroundColor: '#2E7D32' },
 });
 
+// ─── Injury grid options ────────────────────────────────────────────────────
+// 6 opsi (dulu 4) — nambah "Pinggul" & "Punggung" sesuai desain baru.
+const INJURY_OPTIONS: { key: InjuryHistory; label: string }[] = [
+  { key: 'knee',         label: 'Lutut' },
+  { key: 'hip',          label: 'Pinggul' },
+  { key: 'shin_splints', label: 'Tulang Kering' },
+  { key: 'ankle',        label: 'Pergelangan Kaki' },
+  { key: 'back',         label: 'Punggung' },
+  { key: 'other',        label: 'Lainnya' },
+];
+
 // ─── Main component ───────────────────────────────────────────────────────
 export default function AssessmentScreen({ onComplete, onClose }: Props) {
   const insets = useSafeAreaInsets();
@@ -96,6 +107,10 @@ export default function AssessmentScreen({ onComplete, onClose }: Props) {
   const [preferredTime, setPreferredTime] = useState<TrainingTime | null>(null);
   const [activityLevel, setActivityLevel] = useState<ActivityLevel | null>(null);
   const [injury, setInjury]           = useState<InjuryHistory | null>(null);
+  // ✅ NEW: catatan bebas soal cedera, ditampilkan setelah user pilih salah
+  // satu opsi cedera (selain "Tidak Ada Cedera").
+  const [injuryNote, setInjuryNote]   = useState('');
+  const [injuryNoteFocused, setInjuryNoteFocused] = useState(false);
 
   const canContinue = () => {
     if (step === 1) return !!level;
@@ -119,6 +134,7 @@ export default function AssessmentScreen({ onComplete, onClose }: Props) {
         preferredTime: preferredTime!,
         activityLevel: activityLevel!,
         injury:        injury!,
+        injuryNote:    injuryNote.trim() ? injuryNote.trim() : undefined,
       });
     }
   };
@@ -193,18 +209,25 @@ export default function AssessmentScreen({ onComplete, onClose }: Props) {
             </Text>
             <View style={styles.options}>
               <OptionCard
+                selected={goal === 'start_running'}
+                onPress={() => setGoal('start_running')}
+                icon="walk"
+                title="Mulai Berlari"
+                subtitle="pemula yang belum pernah berlari atau baru memulai"
+              />
+              <OptionCard
                 selected={goal === 'weight_loss'}
                 onPress={() => setGoal('weight_loss')}
                 icon="scale"
                 title="Turunkan berat badan"
-                subtitle="Fokus pembakaran kalori & konsistensi"
+                subtitle="Fokus pembakaran kalori & konsistensi ringan"
               />
               <OptionCard
                 selected={goal === 'stamina'}
                 onPress={() => setGoal('stamina')}
                 icon="trending-up"
                 title="Tingkatkan stamina"
-                subtitle="Bangun target agar bisa berlari lebih lama"
+                subtitle="Bangun daya tahan untuk lari lebih lama"
               />
               <OptionCard
                 selected={goal === 'target_5k'}
@@ -218,7 +241,7 @@ export default function AssessmentScreen({ onComplete, onClose }: Props) {
                 onPress={() => setGoal('target_10k')}
                 icon="trophy"
                 title="Target 10K"
-                subtitle="Program bertahap menuju 10 km (untuk konsisten lebih)"
+                subtitle="Program bertahap menuju 10 km (butuh komitmen lebih)"
               />
             </View>
           </>
@@ -227,16 +250,16 @@ export default function AssessmentScreen({ onComplete, onClose }: Props) {
         {/* ── STEP 3: Titik tempuh ──────────────────────────── */}
         {step === 3 && (
           <>
-            <Text style={styles.titleLarge}>Tidak perlu sempurna.{'\n'}Kami hanya ingin tahu{'\n'}titik awal Anda</Text>
+            <Text style={styles.title}>Sejauh mana Anda mampu{'\n'}berlari saat ini?</Text>
             <Text style={styles.subtitle}>
-              Tidak tahu? Tidak masalah, kami akan bantu.
+              Tidak perlu sempurna. Kami hanya ingin tahu titik awal Anda.
             </Text>
             <View style={styles.options}>
               {([
-                { key: 'less_1k',  label: '< 1 km' },
-                { key: '1_3k',    label: '1–3 km' },
-                { key: 'more_3k', label: '> 3 km' },
-                { key: 'unknown', label: 'Saya tidak tahu', sub: 'Tidak apa-apa! Kita akan cari tahu bersama.' },
+                { key: 'less_1k',  label: 'Belum sampai 1 km' },
+                { key: '1_3k',    label: 'Sekitar 1–3 km' },
+                { key: 'more_3k', label: 'Lebih dari 3 km' },
+                { key: 'unknown', label: 'Saya belum tahu', sub: 'Tidak yakin? Kami akan membantu menentukan kemampuan awal Anda bersama.' },
               ] as { key: FurthestRun; label: string; sub?: string }[]).map((opt) => (
                 <OptionCard
                   key={opt.key}
@@ -309,39 +332,39 @@ export default function AssessmentScreen({ onComplete, onClose }: Props) {
                 selected={activityLevel === 'sedentary'}
                 onPress={() => setActivityLevel('sedentary')}
                 icon="desktop"
-                title="Sedenter (Pekerjaan meja)"
-                subtitle="Sebagian besar waktu dihabiskan untuk duduk. Jarang berolahraga."
+                title="Kurang Aktif"
+                subtitle="Sebagian besar waktu dihabiskan untuk duduk atau bekerja di depan meja."
               />
               <OptionCard
                 selected={activityLevel === 'active'}
                 onPress={() => setActivityLevel('active')}
                 icon="walk"
                 title="Cukup Aktif"
-                subtitle="Banyak bergerak sepanjang hari atau olahraga ringan 3–4 kali seminggu."
+                subtitle="Banyak berjalan atau bergerak selama bekerja maupun beraktivitas sehari-hari."
               />
               <OptionCard
                 selected={activityLevel === 'very_active'}
                 onPress={() => setActivityLevel('very_active')}
                 icon="barbell"
                 title="Sangat Aktif"
-                subtitle="Pekerjaan fisik berat atau olahraga intens lebih dari 5 kali seminggu."
+                subtitle="Pekerjaan fisik berat atau rutin melakukan aktivitas fisik hampir setiap hari"
               />
             </View>
           </>
         )}
 
-        {/* ── STEP 6: Riwayat fisik ─────────────────────────── */}
+        {/* ── STEP 6: Riwayat cedera ─────────────────────────── */}
         {step === 6 && (
           <>
-            <Text style={styles.title}>Riwayat &{'\n'}Kondisi Fisik</Text>
+            <Text style={styles.title}>Riwayat Cedera</Text>
             <Text style={styles.subtitle}>
-              Apakah Anda memiliki cedera saat ini atau di masa lalu?
+              Apakah Anda sedang mengalami cedera atau masih memiliki keluhan saat berolahraga?
             </Text>
 
             {/* Tidak ada cedera — highlight */}
             <TouchableOpacity
               style={[styles.noInjuryCard, injury === 'none' && styles.noInjuryCardSelected]}
-              onPress={() => setInjury('none')}
+              onPress={() => { setInjury('none'); setInjuryNote(''); }}
               activeOpacity={0.85}
             >
               <Ionicons name="checkmark-circle" size={22} color={injury === 'none' ? '#2E7D32' : '#888'} />
@@ -356,25 +379,33 @@ export default function AssessmentScreen({ onComplete, onClose }: Props) {
             <Text style={styles.orLabel}>— ATAU PILIH JIKA ADA —</Text>
 
             <View style={styles.injuryGrid}>
-              {([
-                { key: 'knee',        label: 'Nyeri Lutut',    icon: 'body' },
-                { key: 'ankle',       label: 'Cedera Engkel',  icon: 'footsteps' },
-                { key: 'shin_splints',label: 'Shin Splints',   icon: 'walk' },
-                { key: 'other',       label: 'Lainnya',        icon: 'ellipsis-horizontal' },
-              ] as { key: InjuryHistory; label: string; icon: string }[]).map((opt) => (
+              {INJURY_OPTIONS.map((opt) => (
                 <TouchableOpacity
                   key={opt.key}
                   style={[styles.injuryBtn, injury === opt.key && styles.injuryBtnSelected]}
                   onPress={() => setInjury(opt.key)}
                   activeOpacity={0.8}
                 >
-                  <Ionicons name={opt.icon as any} size={22} color={injury === opt.key ? '#2E7D32' : '#555'} />
-                  <Text style={[styles.injuryLabel, injury === opt.key && { color: '#2E7D32', fontWeight: '700' }]}>
+                  <Text style={[styles.injuryLabel, injury === opt.key && styles.injuryLabelSelected]}>
                     {opt.label}
                   </Text>
                 </TouchableOpacity>
               ))}
             </View>
+
+            {/* ✅ NEW: input penjelasan, muncul setelah pilih salah satu cedera */}
+            {injury && injury !== 'none' && (
+              <TextInput
+                style={[styles.injuryInput, injuryNoteFocused && styles.injuryInputFocused]}
+                placeholder="Jelaskan cedera Anda"
+                placeholderTextColor="#AAA"
+                value={injuryNote}
+                onChangeText={setInjuryNote}
+                onFocus={() => setInjuryNoteFocused(true)}
+                onBlur={() => setInjuryNoteFocused(false)}
+                multiline
+              />
+            )}
 
             <Text style={styles.injuryNote}>
               Kami akan menyesuaikan latihan agar tetap aman untuk Anda.
@@ -437,16 +468,27 @@ const styles = StyleSheet.create({
   noInjurySub:   { fontSize: 12, color: '#888', fontFamily: 'Lexend-Regular' },
   orLabel: { textAlign: 'center', fontSize: 11, fontWeight: '700', color: '#BBB', letterSpacing: 0.5, marginBottom: 14, fontFamily: 'Lexend-Bold' },
 
-  // Injury grid
+  // Injury grid — sekarang teks polos tanpa icon, 6 opsi 2 kolom
   injuryGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 16 },
   injuryBtn:  {
     width: '47%', backgroundColor: '#F4F4F4', borderRadius: 14,
-    padding: 16, alignItems: 'center', gap: 8,
+    paddingVertical: 16, paddingHorizontal: 10,
+    alignItems: 'center', justifyContent: 'center',
     borderWidth: 1.5, borderColor: 'transparent',
   },
   injuryBtnSelected: { backgroundColor: '#F0FFF4', borderColor: '#2E7D32' },
   injuryLabel: { fontSize: 13, fontWeight: '600', color: '#555', textAlign: 'center', fontFamily: 'Lexend-Bold' },
+  injuryLabelSelected: { color: '#2E7D32', fontWeight: '700', fontFamily: 'Lexend-Bold' },
   injuryNote:  { fontSize: 12, color: '#AAA', textAlign: 'center', lineHeight: 18, fontFamily: 'Lexend-Regular' },
+
+  // ✅ NEW: input penjelasan cedera
+  injuryInput: {
+    borderWidth: 1.5, borderColor: '#EEEEEE', borderRadius: 14,
+    padding: 14, fontSize: 14, color: '#111', marginBottom: 16,
+    fontFamily: 'Lexend-Regular', minHeight: 52, textAlignVertical: 'top',
+    backgroundColor: '#FAFAFA',
+  },
+  injuryInputFocused: { borderColor: '#2E7D32', backgroundColor: '#FFFFFF' },
 
   // Footer
   footer:      { position: 'absolute', bottom: 0, left: 0, right: 0, padding: 20, backgroundColor: '#FFFFFF', borderTopWidth: 1, borderTopColor: '#F0F0F0' },

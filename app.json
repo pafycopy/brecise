@@ -9,7 +9,12 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "UIBackgroundModes": ["location"],
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Brecise menggunakan lokasi untuk melacak jarak dan rute lari kamu, termasuk saat layar HP mati.",
+        "NSLocationWhenInUseUsageDescription": "Brecise menggunakan lokasi untuk melacak jarak dan rute lari kamu."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -19,7 +24,14 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.brecise.app"
+      "package": "com.brecise.app",
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
+        "FOREGROUND_SERVICE",
+        "FOREGROUND_SERVICE_LOCATION"
+      ]
     },
     "web": {
       "output": "static",
@@ -63,7 +75,16 @@
           "iosAppId": "ca-app-pub-4673696615107294~2220067287"
         }
       ],
-      "react-native-iap"
+      "react-native-iap",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Brecise menggunakan lokasi untuk melacak jarak dan rute lari kamu, termasuk saat layar HP mati.",
+          "locationAlwaysPermission": "Brecise melacak lari kamu di latar belakang saat layar HP mati.",
+          "isAndroidBackgroundLocationEnabled": true,
+          "isAndroidForegroundServiceEnabled": true
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import Animated, {
   useSharedValue, useAnimatedStyle, withTiming, Easing,
 } from 'react-native-reanimated';
@@ -11,10 +11,10 @@ import { useProStore } from '@/store/proStore';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Circle } from 'react-native-svg';
 import * as Haptics from 'expo-haptics';
-import * as Location from 'expo-location';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useFinishWorkout } from '@/hooks/useFinishWorkout';
+import { useBackgroundLocation } from '@/hooks/useBackgroundLocation';
 import { useStartSound } from '@/hooks/useStartSound';
 
 const MIN_SPEED_MS       = 1.0;
@@ -122,8 +122,9 @@ export default function TempoTracker() {
     cooldown: { actualDistance: 0, actualDuration: 0, actualPace: '--:--', targetDistance: phases[2].targetDistKm, targetPace: phases[2].targetPaceRaw, hit: false },
   });
   const [finalResults, setFinalResults] = useState<Record<TempoPhase, PhaseResult> | null>(null);
+  // ✅ NEW: kasih tau user sekali kalau izin lokasi background ditolak.
+  const [bgWarningShown, setBgWarningShown] = useState(false);
 
-  const subscription     = useRef<any>(null);
   const timerRef         = useRef<any>(null);
   const holdTimeout      = useRef<any>(null);
   const lastLocationRef  = useRef<any>(null);
@@ -152,7 +153,7 @@ const handleReturnToDashboard = () => {
   const holdProgress = useSharedValue(0);
 
   const { finish } = useFinishWorkout(
-    dateKey, uid, [timerRef], subscription,
+    dateKey, uid, [timerRef], { current: null },
     { hasOwnDoneScreen: true, onAfterSave: () => setStatus('done') },
   );
 
@@ -237,42 +238,49 @@ const handleReturnToDashboard = () => {
     return actualSec <= target * 60;
   };
 
-  const startLocationWatch = async () => {
-    subscription.current = await Location.watchPositionAsync(
-      { accuracy: Location.Accuracy.BestForNavigation, timeInterval: 1000, distanceInterval: 2 },
-      (loc) => {
-        const coord    = loc.coords;
-        const accuracy = coord.accuracy ?? 999;
-        const speed    = coord.speed ?? 0;
-        if (accuracy > MIN_ACCURACY_M) return;
-        isMovingRef.current = speed >= MIN_SPEED_MS;
-        const filteredLat = kalmanUpdate('lat', coord.latitude);
-        const filteredLon = kalmanUpdate('lon', coord.longitude);
-        const filtered    = { latitude: filteredLat, longitude: filteredLon };
-        setPhaseDist((prev) => {
-          const last = lastLocationRef.current;
-          if (!last) { lastLocationRef.current = filtered; return prev; }
-          const dist = getDistance(last, filtered);
-          if (dist < MIN_DIST_THRESHOLD) return prev;
-          if (dist > 0.1)               return prev;
-          if (!isMovingRef.current)     return prev;
-          lastLocationRef.current = filtered;
-          const newDist = prev + dist;
-          const currentTarget = phases[phaseIndexRef.current].targetDistKm;
-          if (currentTarget > 0 && newDist >= currentTarget && statusRef.current === 'running' && !autoTriggered.current) {
-            autoTriggered.current = true;
-            setTimeout(() => completePhase(newDist), 0);
-          }
-          return newDist;
-        });
+  // ── Handler tiap update lokasi masuk (dari foreground ATAU background) ────
+  const handleLocationUpdate = useCallback((loc: { coords: any }) => {
+    const coord    = loc.coords;
+    const accuracy = coord.accuracy ?? 999;
+    const speed    = coord.speed ?? 0;
+    if (accuracy > MIN_ACCURACY_M) return;
+    isMovingRef.current = speed >= MIN_SPEED_MS;
+    const filteredLat = kalmanUpdate('lat', coord.latitude);
+    const filteredLon = kalmanUpdate('lon', coord.longitude);
+    const filtered    = { latitude: filteredLat, longitude: filteredLon };
+    setPhaseDist((prev) => {
+      const last = lastLocationRef.current;
+      if (!last) { lastLocationRef.current = filtered; return prev; }
+      const dist = getDistance(last, filtered);
+      if (dist < MIN_DIST_THRESHOLD) return prev;
+      if (dist > 0.1)               return prev;
+      if (!isMovingRef.current)     return prev;
+      lastLocationRef.current = filtered;
+      const newDist = prev + dist;
+      const currentTarget = phases[phaseIndexRef.current].targetDistKm;
+      if (currentTarget > 0 && newDist >= currentTarget && statusRef.current === 'running' && !autoTriggered.current) {
+        autoTriggered.current = true;
+        setTimeout(() => completePhase(newDist), 0);
       }
-    );
-  };
+      return newDist;
+    });
+  }, []);
+
+  // ✅ NEW: ganti Location.watchPositionAsync manual dengan hook background
+  // location — tetap jalan lewat foreground service Android / background
+  // mode iOS walau layar HP mati.
+  const { requestPermissions, start: startBgLocation, stop: stopBgLocation } =
+    useBackgroundLocation(handleLocationUpdate);
+
+  // ✅ NEW: pastikan background tracking berhenti kalau screen di-unmount
+  // tanpa lewat tombol finish/discard.
+  useEffect(() => {
+    return () => { stopBgLocation(); };
+  }, []);
 
   const completePhase = async (overrideDist?: number) => {
     if (statusRef.current === 'idle' || statusRef.current === 'done') return;
-    subscription.current?.remove();
-    subscription.current    = null;
+    await stopBgLocation();
     clearInterval(timerRef.current);
     isMovingRef.current     = false;
     lastLocationRef.current = null;
@@ -315,22 +323,30 @@ const handleReturnToDashboard = () => {
 
   const handleStart = async () => {
     if (status === 'idle') {
-      const { status: perm } = await Location.requestForegroundPermissionsAsync();
-      if (perm !== 'granted') { alert('Izin lokasi ditolak.'); return; }
+      const { granted, backgroundGranted } = await requestPermissions();
+      if (!granted) { alert('Izin lokasi ditolak.'); return; }
+      // ✅ NEW: kalau izin background ditolak, tracking tetap bisa jalan tapi
+      // cuma saat layar menyala — kasih tau user sekali di awal sesi.
+      if (!backgroundGranted && !bgWarningShown) {
+        setBgWarningShown(true);
+        Alert.alert(
+          'Izin lokasi latar belakang belum aktif',
+          'Tracking bisa berhenti kalau layar HP mati. Aktifkan izin lokasi "Selalu Izinkan" di pengaturan HP untuk tracking tanpa henti.',
+        );
+      }
       resetKalman();
       autoTriggered.current = false;
-      await startLocationWatch();
+      await startBgLocation();
       await playStartSound();
       setStatus('running');
     } else if (status === 'running') {
-      subscription.current?.remove();
-      subscription.current    = null;
+      await stopBgLocation();
       isMovingRef.current     = false;
       lastLocationRef.current = null;
       setStatus('paused');
     } else {
       resetKalman();
-      await startLocationWatch();
+      await startBgLocation();
       await playStartSound();
       setStatus('running');
     }
@@ -341,7 +357,7 @@ const handleReturnToDashboard = () => {
   const handleDiscard = () => {
     Alert.alert('Keluar dari latihan?', 'Progress latihan akan hilang.', [
       { text: 'Batal', style: 'cancel' },
-      { text: 'Keluar', style: 'destructive', onPress: () => { subscription.current?.remove(); router.back(); } },
+      { text: 'Keluar', style: 'destructive', onPress: async () => { await stopBgLocation(); router.back(); } },
     ]);
   };
 
