@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useEffect, useRef } from "react";
 
 import {
     Animated,
@@ -17,9 +17,27 @@ import { EducationTopic } from "@/constants/educationdata";
 type Props = {
   topic: EducationTopic;
   onBack: () => void;
+  // Lesson yang harus langsung di-scroll begitu layar ini
+  // kebuka (dikirim dari tips card di dashboard).
+  scrollToLessonId?: number | null;
 };
 
-const RunningTechniqueScreen = ({ topic, onBack }: Props) => {
+const RunningTechniqueScreen = ({ topic, onBack, scrollToLessonId }: Props) => {
+  const scrollRef = useRef<any>(null);
+  const lessonPositions = useRef<Record<number, number>>({});
+
+  useEffect(() => {
+    if (scrollToLessonId == null) return;
+    const timer = setTimeout(() => {
+      const y = lessonPositions.current[scrollToLessonId];
+      if (y !== undefined) {
+        (scrollRef.current as any)?.scrollTo?.({ y: Math.max(y - 20, 0), animated: true });
+      }
+    }, 400);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scrollToLessonId]);
+
   const scrollY = useRef(new Animated.Value(0)).current;
 
   const headerTitleOpacity = scrollY.interpolate({
@@ -48,6 +66,7 @@ const RunningTechniqueScreen = ({ topic, onBack }: Props) => {
 
       {/* CONTENT */}
       <Animated.ScrollView
+        ref={scrollRef}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}
         scrollEventThrottle={16}
@@ -91,7 +110,13 @@ const RunningTechniqueScreen = ({ topic, onBack }: Props) => {
 
         {/* LESSONS */}
         {topic.lessons.map((lesson, index) => (
-          <View key={lesson.id} style={styles.lessonCard}>
+          <View
+            key={lesson.id}
+            onLayout={(e) => {
+              lessonPositions.current[lesson.id] = e.nativeEvent.layout.y;
+            }}
+            style={styles.lessonCard}
+          >
             {/* ICON */}
             <View style={styles.iconWrapper}>
               <Ionicons name={topic.icon as any} size={18} color="#222" />

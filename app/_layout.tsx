@@ -202,16 +202,15 @@ export default function RootLayout() {
   }, [session, segments, isNavigationReady, isAuthLoading, isResettingPassword]);
 
   // ── Assessment ────────────────────────────────────────────────────────────
-  // FIX: sebelumnya popup assessment bisa muncul "nyelonong" duluan sebelum
-  // syncFromSupabase() dari assessmentStore beneran selesai (race condition
-  // antara timer 700ms vs waktu fetch ke Supabase). Sekarang nunggu
-  // `hasSynced` benar-benar true dulu, baru dievaluasi apakah perlu
-  // nampilin assessment atau nggak — jadi gak akan "flash" muncul padahal
-  // akun itu sebenarnya sudah punya program/assessment.
+  // FIX: sebelumnya popup assessment nunggu `hasSynced` dulu (biar gak
+  // "flash" muncul padahal akun itu sebenarnya sudah punya program), TAPI
+  // masih ditambah delay artifisial 700ms sebelum ditampilkan. Delay itu
+  // dihapus — begitu `hasSynced` true dan ternyata belum isCompleted,
+  // assessment langsung ditampilkan sebagai layar pertama yang dilihat user
+  // (bukan dashboard dulu baru nongol assessment beberapa saat kemudian).
   useEffect(() => {
     if (session && hasSynced && !isCompleted && !isResettingPassword) {
-      const timer = setTimeout(() => setShowAssessment(true), 700);
-      return () => clearTimeout(timer);
+      setShowAssessment(true);
     }
   }, [session, isCompleted, hasSynced, isResettingPassword]);
 
@@ -260,10 +259,20 @@ export default function RootLayout() {
     return () => appStateSubscription.remove();
   }, [session, isAuthLoading]);
 
-  // ── Handle close assessment ───────────────────────────────────────────────
+  // ── Handle close assessment (user MENOLAK / keluar sebelum selesai) ───────
   const handleAssessmentClose = () => {
     setShowAssessment(false);
     setTimeout(() => router.replace('/(tabs)/dashboard'), 300);
+  };
+
+  // ── Handle assessment selesai (program berhasil dibuat) ───────────────────
+  // ✅ FIX: TIDAK redirect ke dashboard di sini. AssessmentFlow sendiri yang
+  // langsung router.push ke '/(tabs)/training' (Plan) setelah ini dipanggil.
+  // Sebelumnya kedua kasus (menolak vs selesai) sama-sama lewat
+  // handleAssessmentClose, jadi 300ms setelah user selesai bikin program,
+  // timer redirect-ke-dashboard di atas menimpa push ke training tadi.
+  const handleAssessmentDone = () => {
+    setShowAssessment(false);
   };
 
   if (!fontsLoaded && !fontError) return null;
@@ -287,6 +296,7 @@ export default function RootLayout() {
           <AssessmentFlow
             visible={showAssessment}
             onClose={handleAssessmentClose}
+            onDone={handleAssessmentDone}
           />
           {isAuthLoading && (
             <View style={{

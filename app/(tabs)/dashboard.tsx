@@ -126,7 +126,10 @@ const Dashboard = () => {
   }, []);
 
   const handleTipPress = () => {
-    openTopic(tip.topicId);
+    // ✅ ikut kirim lessonId (kalau ada) biar layar topic-nya bisa langsung
+    // auto-scroll ke lesson yang lagi jadi tips hari ini (mis. "Butt Kicks"),
+    // bukan cuma buka topic-nya dari paling atas.
+    openTopic(tip.topicId, tip.lessonId);
     router.navigate('/(tabs)/education' as any);
   };
 

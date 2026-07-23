@@ -3,7 +3,7 @@ import ExerciseCard from "@/components/ui/education/exercisecard";
 import { EducationLesson, EducationTopic } from "@/constants/educationdata";
 import { ExerciseCategory, EXERCISES } from "@/constants/strengthdata";
 import { Ionicons } from "@expo/vector-icons";
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Animated,
   Modal,
@@ -17,13 +17,30 @@ import { SafeAreaView } from "react-native-safe-area-context";
 type Props = {
   topic: EducationTopic;
   onBack: () => void;
+  // Lesson yang harus langsung di-scroll begitu layar ini
+  // kebuka (dikirim dari tips card di dashboard).
+  scrollToLessonId?: number | null;
 };
 
-const StrengthScreen = ({ topic, onBack }: Props) => {
+const StrengthScreen = ({ topic, onBack, scrollToLessonId }: Props) => {
   const scrollY = useRef(new Animated.Value(0)).current;
+  const scrollRef = useRef<any>(null);
+  const lessonPositions = useRef<Record<number, number>>({});
   const [selectedLesson, setSelectedLesson] = useState<EducationLesson | null>(
     null,
   );
+
+  useEffect(() => {
+    if (scrollToLessonId == null) return;
+    const timer = setTimeout(() => {
+      const y = lessonPositions.current[scrollToLessonId];
+      if (y !== undefined) {
+        (scrollRef.current as any)?.scrollTo?.({ y: Math.max(y - 20, 0), animated: true });
+      }
+    }, 400);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scrollToLessonId]);
 
   const headerTitleOpacity = scrollY.interpolate({
     inputRange: [60, 100],
@@ -61,6 +78,7 @@ const StrengthScreen = ({ topic, onBack }: Props) => {
       </View>
 
       <Animated.ScrollView
+        ref={scrollRef}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}
         scrollEventThrottle={16}
@@ -86,16 +104,22 @@ const StrengthScreen = ({ topic, onBack }: Props) => {
 
         {/* EXERCISE CARDS */}
         {topic.lessons.map((lesson) => (
-          <ExerciseCard
+          <View
             key={lesson.id}
-            title={lesson.title}
-            subtitle={lesson.subtitle}
-            description={lesson.description}
-            icon={lesson.icon}
-            iconColor={lesson.color}
-            exercise={getExerciseCount(lesson.title)}
-            onPress={() => setSelectedLesson(lesson)}
-          />
+            onLayout={(e) => {
+              lessonPositions.current[lesson.id] = e.nativeEvent.layout.y;
+            }}
+          >
+            <ExerciseCard
+              title={lesson.title}
+              subtitle={lesson.subtitle}
+              description={lesson.description}
+              icon={lesson.icon}
+              iconColor={lesson.color}
+              exercise={getExerciseCount(lesson.title)}
+              onPress={() => setSelectedLesson(lesson)}
+            />
+          </View>
         ))}
       </Animated.ScrollView>
 

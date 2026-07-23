@@ -1,7 +1,7 @@
 import WarmupCard from "@/components/ui/education/warmupcard";
 import { EducationTopic } from "@/constants/educationdata";
 import { Ionicons } from "@expo/vector-icons";
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Animated,
   StyleSheet,
@@ -14,14 +14,41 @@ import { SafeAreaView } from "react-native-safe-area-context";
 type Props = {
   topic: EducationTopic;
   onBack: () => void;
+  // Lesson yang harus langsung di-scroll begitu layar ini
+  // kebuka (dikirim dari tips card di dashboard). Optional — kalau gak ada,
+  // layar ini tampil seperti biasa dari paling atas.
+  scrollToLessonId?: number | null;
 };
 
-const WarmupScreen = ({ topic, onBack }: Props) => {
-  const [selectedTab, setSelectedTab] = useState<"warmup" | "cooldown">(
-    "warmup",
-  );
+const WarmupScreen = ({ topic, onBack, scrollToLessonId }: Props) => {
+  // Kalau lesson tujuan ada di tab "cooldown", langsung buka di tab itu
+  // dari awal — biar gak nampilin tab "warmup" dulu baru pindah tab.
+  const [selectedTab, setSelectedTab] = useState<"warmup" | "cooldown">(() => {
+    const target = topic.lessons.find((l) => l.id === scrollToLessonId);
+    return target?.type === "cooldown" ? "cooldown" : "warmup";
+  });
+
+  const scrollRef = useRef<any>(null);
+  // Nyimpen posisi Y tiap card lesson, diisi lewat onLayout pas card-nya
+  // dirender — dipakai buat tau ke mana harus scroll.
+  const lessonPositions = useRef<Record<number, number>>({});
 
   const scrollY = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (scrollToLessonId == null) return;
+    // Kasih jeda dikit biar modal fullscreen selesai animasi masuk & semua
+    // card udah kelar layout, baru discroll. Cuma scroll polos, tanpa efek
+    // highlight/border apa pun di card tujuannya.
+    const timer = setTimeout(() => {
+      const y = lessonPositions.current[scrollToLessonId];
+      if (y !== undefined) {
+        (scrollRef.current as any)?.scrollTo?.({ y: Math.max(y - 20, 0), animated: true });
+      }
+    }, 400);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scrollToLessonId]);
 
   const headerTitleOpacity = scrollY.interpolate({
     inputRange: [60, 100],
@@ -55,6 +82,7 @@ const WarmupScreen = ({ topic, onBack }: Props) => {
 
       {/* CONTENT */}
       <Animated.ScrollView
+        ref={scrollRef}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}
         scrollEventThrottle={16}
@@ -114,13 +142,19 @@ const WarmupScreen = ({ topic, onBack }: Props) => {
 
         {/* CARDS */}
         {filteredLessons.map((lesson) => (
-          <WarmupCard
+          <View
             key={lesson.id}
-            title={lesson.title}
-            subtitle={lesson.subtitle} // "Mengapa Hal Ini Penting:"
-            description={lesson.description}
-            gif={lesson.gif}
-          />
+            onLayout={(e) => {
+              lessonPositions.current[lesson.id] = e.nativeEvent.layout.y;
+            }}
+          >
+            <WarmupCard
+              title={lesson.title}
+              subtitle={lesson.subtitle} // "Mengapa Hal Ini Penting:"
+              description={lesson.description}
+              gif={lesson.gif}
+            />
+          </View>
         ))}
       </Animated.ScrollView>
     </SafeAreaView>

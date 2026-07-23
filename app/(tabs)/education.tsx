@@ -28,29 +28,48 @@ const cardStepId = (topicId: string | number) => `education-card-${topicId}`
 
 const Education = () => {
   const [selectedTopic, setSelectedTopic] = useState<EducationTopic | null>(null)
-  const { pendingTopicId, clearPendingTopic } = useUIEducationStore()
+  // ✅ lesson yang perlu di-auto-scroll begitu selectedTopic ini kebuka
+  // (diisi dari tips card di dashboard, mis. buka topic 3 lalu scroll ke
+  // lesson "Butt Kicks"). Disimpan di local state (bukan langsung baca dari
+  // store) supaya nilainya gak keburu ke-reset pas clearPendingLesson()
+  // dipanggil di effect yang sama.
+  const [scrollToLessonId, setScrollToLessonId] = useState<number | null>(null)
+  const { pendingTopicId, pendingLessonId, clearPendingTopic, clearPendingLesson } = useUIEducationStore()
 
   // Setiap kali tab ini aktif, cek apakah ada topic yang perlu dibuka
   useFocusEffect(
     useCallback(() => {
       if (pendingTopicId === null) return
       const topic = educationData.find((t) => t.id === pendingTopicId)
+      const lessonId = pendingLessonId
       clearPendingTopic() // reset setelah dibaca
-      if (topic) setSelectedTopic(topic)
+      clearPendingLesson()
+      if (topic) {
+        setSelectedTopic(topic)
+        setScrollToLessonId(lessonId)
+      }
     }, [pendingTopicId])
   )
+
+  // Dipakai tiap kali layar topic ditutup, entah lewat tombol back di
+  // screen-nya atau lewat hardware back Android — biar scrollToLessonId
+  // gak "nyangkut" ke sesi buka-topic berikutnya yang manual (tanpa lessonId).
+  const closeTopic = () => {
+    setSelectedTopic(null)
+    setScrollToLessonId(null)
+  }
 
   const renderScreen = () => {
     if (!selectedTopic) return null
     switch (selectedTopic.type) {
       case 'running':
-        return <RunningTechniqueScreen topic={selectedTopic} onBack={() => setSelectedTopic(null)} />
+        return <RunningTechniqueScreen topic={selectedTopic} onBack={closeTopic} scrollToLessonId={scrollToLessonId} />
       case 'injury':
-        return <InjuryPreventionScreen topic={selectedTopic} onBack={() => setSelectedTopic(null)} />
+        return <InjuryPreventionScreen topic={selectedTopic} onBack={closeTopic} scrollToLessonId={scrollToLessonId} />
       case 'warmup':
-        return <WarmupScreen topic={selectedTopic} onBack={() => setSelectedTopic(null)} />
+        return <WarmupScreen topic={selectedTopic} onBack={closeTopic} scrollToLessonId={scrollToLessonId} />
       case 'strength':
-        return <StrengthScreen topic={selectedTopic} onBack={() => setSelectedTopic(null)} />
+        return <StrengthScreen topic={selectedTopic} onBack={closeTopic} scrollToLessonId={scrollToLessonId} />
       default:
         return null
     }
@@ -138,7 +157,7 @@ const Education = () => {
               description={topic.description}
               icon={topic.icon}
               color={topic.color}
-              onPress={() => setSelectedTopic(topic)}
+              onPress={() => { setSelectedTopic(topic); setScrollToLessonId(null) }}
             />
           </CoachMarkTarget>
         ))}
@@ -148,7 +167,7 @@ const Education = () => {
         visible={!!selectedTopic}
         animationType="slide"
         presentationStyle="fullScreen"
-        onRequestClose={() => setSelectedTopic(null)}
+        onRequestClose={closeTopic}
       >
         {renderScreen()}
       </Modal>

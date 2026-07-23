@@ -354,6 +354,7 @@ const ProfileScreen = () => {
       <AssessmentFlow
         visible={showAssessment}
         onClose={() => setShowAssessment(false)}
+        onDone={() => setShowAssessment(false)}
       />
 
     </SafeAreaView>

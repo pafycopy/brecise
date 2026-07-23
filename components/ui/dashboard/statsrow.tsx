@@ -100,7 +100,7 @@ const styles = StyleSheet.create({
     marginBottom: 6
   },
   pill: {
-    paddingHorizontal: 16, paddingVertical: 7,
+    paddingHorizontal: 18, paddingVertical: 12,
     borderRadius: 20,
     backgroundColor: '#F0F0F0',
   },

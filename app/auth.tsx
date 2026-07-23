@@ -623,7 +623,16 @@ export default function AuthScreen() {
                     />
                   </TouchableOpacity>
                 </View>
-                {!!passwordError && <Text style={styles.errorText}>{passwordError}</Text>}
+                {/* Hint syarat kata sandi — selalu tampil selama syarat belum
+                    terpenuhi (bukan cuma muncul setelah submit gagal), biar
+                    user langsung tau syaratnya dari awal ngetik. */}
+                {isRegister && validatePasswordStrength(password) !== '' && (
+                  <Text style={styles.passwordHint}>
+                    Kata Sandi Anda harus paling tidak 6 karakter dan harus menyertakan kombinasi angka, huruf, dan karakter khusus (!$@%).
+                  </Text>
+                )}
+
+                {!isRegister && !!passwordError && <Text style={styles.errorText}>{passwordError}</Text>}
 
                 {!isRegister && (
                   <TouchableOpacity
@@ -739,6 +748,13 @@ const styles = StyleSheet.create({
   inputIcon: { marginRight: 10 },
   input: { flex: 1, fontSize: 15, color: '#111', fontFamily: 'Lexend-Regular' },
   errorText: { fontSize: 11, color: '#FF6B6B', fontWeight: '600', fontFamily: 'Lexend-Bold' },
+  passwordHint: {
+    fontSize: 12,
+    lineHeight: 17,
+    color: '#8A8A8A',
+    fontFamily: 'Lexend-Regular',
+    marginTop: 2,
+  },
 
   // ── OTP ──
   otpRow: {

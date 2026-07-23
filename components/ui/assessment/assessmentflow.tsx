@@ -11,12 +11,18 @@ import { GeneratedDay } from '@/utils/generateProgram';
 
 type Props = {
   visible: boolean;
+  // Dipanggil saat user MENOLAK / keluar dari assessment sebelum selesai
+  // (tombol close di step 1, atau hardware back). Akan diarahkan ke dashboard.
   onClose: () => void;
+  // Dipanggil saat assessment SELESAI & program berhasil dibuat.
+  // Cuma menyembunyikan modal — TIDAK mengarahkan ke dashboard, karena
+  // setelah ini AssessmentFlow sendiri yang push ke halaman Plan (training).
+  onDone: () => void;
 };
 
 type FlowStep = 'assessment' | 'result';
 
-export default function AssessmentFlow({ visible, onClose }: Props) {
+export default function AssessmentFlow({ visible, onClose, onDone }: Props) {
   const router = useRouter();
   const { setAssessment } = useAssessmentStore();
   const { addWorkout, clearGeneratedWorkouts } = useWorkoutStore();
@@ -46,13 +52,19 @@ export default function AssessmentFlow({ visible, onClose }: Props) {
 
     // Reset flow
     setFlowStep('assessment');
-    onClose();
+    // ✅ FIX: dulu di sini manggil onClose() — itu sama dengan handler yang
+    // dipakai buat "menolak" assessment, yang juga menjadwalkan
+    // router.replace ke dashboard 300ms kemudian. Akibatnya, push ke
+    // training di bawah ini sempat kejadian, tapi 300ms kemudian ketimpa
+    // balik ke dashboard oleh timer dari onClose. Sekarang pakai onDone()
+    // yang cuma menyembunyikan modal tanpa menjadwalkan redirect apa pun.
+    onDone();
 
     if (!isPro) {
       showInterstitialAd();
     }
 
-    // Arahkan ke tab training agar user langsung lihat program
+    // Arahkan ke tab training (Plan) agar user langsung lihat program
     router.push('/(tabs)/training');
   };
 

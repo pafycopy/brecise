@@ -359,7 +359,7 @@ function CoachMarkOverlay({
 const styles = StyleSheet.create({
   mask: { position: 'absolute', backgroundColor: 'rgba(17,17,17,0.75)' },
   highlightBorder: {
-    position: 'absolute', borderRadius: 16,
+    position: 'absolute', borderRadius: 0,
     borderWidth: 2.5, borderColor: '#2E7D32',
   },
   tooltip: {

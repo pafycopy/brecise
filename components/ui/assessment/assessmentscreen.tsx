@@ -435,7 +435,7 @@ const styles = StyleSheet.create({
   safe:    { flex: 1, backgroundColor: '#FFFFFF' },
   header:  { paddingHorizontal: 20, paddingBottom: 4, zIndex: 10, position: 'relative' },
   backBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#F4F4F4', alignItems: 'center', justifyContent: 'center' },
-  content: { paddingHorizontal: 20, paddingBottom: 100 },
+  content: { paddingHorizontal: 20, paddingBottom: 140 },
 
   title:      { fontSize: 28, fontWeight: '800', color: '#111', lineHeight: 36, marginBottom: 8, fontFamily: 'Lexend-Black' },
   titleLarge: { fontSize: 26, fontWeight: '800', color: '#111', lineHeight: 34, marginBottom: 8, fontFamily: 'Lexend-Black' },

@@ -20,22 +20,25 @@ const formatLabel = (dateKey: string): string => {
   return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
 };
 
+// ✅ `lessonId` = id lesson yang sesuai di dalam constants/educationdata.ts
+// (topic dengan id = topicId). Dipakai untuk auto-scroll ke card lesson yang
+// tepat begitu topic-nya dibuka dari tips card ini. Kalau gak ada lesson yang
+// benar-benar cocok di topic tsb (misal "Arm Swing"), lessonId sengaja
+// dikosongin — nanti cuma buka topic-nya aja tanpa auto-scroll.
 const TIPS = [
-  { id: 1, topicId: 3, title: 'High Knees', icon: 'walk', iconBg: '#DDFFE2',
+  { id: 1, topicId: 3, lessonId: 1, title: 'High Knees', icon: 'walk', iconBg: '#DDFFE2',
     description: 'Mengaktifkan otot fleksor pinggul dan bokong, serta melatih postur angkatan kaki yang ideal saat berlari.' },
-  { id: 2, topicId: 3, title: 'Butt Kicks', icon: 'body', iconBg: '#E2F0FF',
+  { id: 2, topicId: 3, lessonId: 2, title: 'Butt Kicks', icon: 'body', iconBg: '#E2F0FF',
     description: 'Melatih otot hamstring dan meningkatkan frekuensi langkah kaki agar lebih efisien saat berlari.' },
-  { id: 3, topicId: 3, title: 'Leg Swings', icon: 'sync', iconBg: '#E2F4FF',
+  { id: 3, topicId: 3, lessonId: 3, title: 'Leg Swings', icon: 'sync', iconBg: '#E2F4FF',
     description: 'Memanaskan sendi pinggul dan meningkatkan range of motion sebelum lari jarak jauh.' },
-  { id: 4, topicId: 3, title: 'Walking Lunges', icon: 'walk', iconBg: '#FFF2E2',
+  { id: 4, topicId: 3, lessonId: 4, title: 'Walking Lunges', icon: 'walk', iconBg: '#FFF2E2',
     description: 'Mengaktifkan otot paha dan bokong sebagai persiapan sebelum lari agar lebih bertenaga.' },
-  { id: 5, topicId: 3, title: 'Arm Swing', icon: 'arrow-up', iconBg: '#FFEAE2',
-    description: 'Ayunan lengan yang benar membantu menjaga keseimbangan dan efisiensi energi saat berlari.' },
-  { id: 6, topicId: 1, title: 'Postur Tubuh', icon: 'body', iconBg: '#DDFFE2',
+  { id: 5, topicId: 1, lessonId: 1, title: 'Postur Tubuh', icon: 'body', iconBg: '#DDFFE2',
     description: 'Jaga tubuh tegak dengan bahu rileks. Condongkan tubuh sedikit ke depan dari pergelangan kaki.' },
-  { id: 7, topicId: 2, title: 'Cegah Shin Splints', icon: 'fitness', iconBg: '#FFE8E8',
+  { id: 6, topicId: 2, lessonId: 2, title: 'Cegah Shin Splints', icon: 'fitness', iconBg: '#FFE8E8',
     description: 'Tingkatkan volume lari secara bertahap maksimal 10% per minggu untuk mencegah shin splints.' },
-  { id: 8, topicId: 4, title: 'Core Stability', icon: 'accessibility', iconBg: '#F2E2FF',
+  { id: 7, topicId: 4, lessonId: 2, title: 'Core Stability', icon: 'accessibility', iconBg: '#F2E2FF',
     description: 'Core yang kuat menjaga postur lari tetap stabil dan mengurangi risiko cedera punggung bawah.' },
 ];
 
